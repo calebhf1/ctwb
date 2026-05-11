@@ -8,18 +8,6 @@ function Leaderboard() {
   const [game, setGame] = useState(null);
   const [scores, setScores] = useState([]);
   const [loading, setLoading] = useState(true);
-  const CITY_TIMEZONES = {
-  "Chicago": "America/Chicago",
-  "New York": "America/New_York",
-  "Los Angeles": "America/Los_Angeles",
-  "San Francisco": "America/Los_Angeles",
-  "San Diego": "America/Los_Angeles",
-  "Houston": "America/Chicago",
-  "Philadelphia": "America/New_York",
-  "Washington DC": "America/New_York",
-  "Boston": "America/New_York",
-  "Miami": "America/New_York",
-};
 
   useEffect(() => {
     async function loadLeaderboard() {
