@@ -8,8 +8,7 @@ const MODES = [
 ];
 
 async function fetchTravelTime(origin, destination, mode) {
-  const key = process.env.REACT_APP_GOOGLE_MAPS_KEY;
-  const params = new URLSearchParams({ origins: origin, destinations: destination, mode, key });
+  const params = new URLSearchParams({ origins: origin, destinations: destination, mode });
   const response = await fetch(`/api/maps?${params}`);
   const data = await response.json();
   const seconds = data.rows[0].elements[0].duration.value;
