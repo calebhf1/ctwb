@@ -2,10 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const MODES = [
-  { key: "driving",   label: "Car",  emoji: "🚗" },
-  { key: "walking",   label: "Walk",  emoji: "🚶" },
-  { key: "bicycling", label: "Bike",  emoji: "🚲" },
-  { key: "transit",   label: "Transit",  emoji: "🚌" },
+  { key: "driving",   label: "Car",     emoji: "🚗" },
+  { key: "walking",   label: "Walk",    emoji: "🚶" },
+  { key: "bicycling", label: "Bike",    emoji: "🚲" },
+  { key: "transit",   label: "Transit", emoji: "🚌" },
 ];
 
 async function fetchTravelTime(origin, destination, mode) {
@@ -24,6 +24,10 @@ async function fetchAllModes(origin, destination) {
     results[mode.key] = await fetchTravelTime(origin, destination, mode.key);
   }
   return results;
+}
+
+function toMinutes(h, m) {
+  return (parseInt(h) || 0) * 60 + (parseInt(m) || 0);
 }
 
 function calcScore(guess, actual) {
@@ -70,7 +74,12 @@ function FreeMode() {
   const navigate = useNavigate();
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
-  const [guesses, setGuesses] = useState({ driving: "", walking: "", bicycling: "", transit: "" });
+  const [guesses, setGuesses] = useState({
+    driving:   { h: "", m: "" },
+    walking:   { h: "", m: "" },
+    bicycling: { h: "", m: "" },
+    transit:   { h: "", m: "" },
+  });
   const [actuals, setActuals] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -78,7 +87,8 @@ function FreeMode() {
   async function handleSubmit() {
     if (!origin || !destination) return setError("Enter both locations.");
     for (const m of MODES) {
-      if (!guesses[m.key] || isNaN(guesses[m.key])) return setError(`Enter a guess for ${m.label}.`);
+      const total = toMinutes(guesses[m.key].h, guesses[m.key].m);
+      if (total === 0) return setError(`Enter a guess for ${m.label}.`);
     }
     setError("");
     setLoading(true);
@@ -94,7 +104,12 @@ function FreeMode() {
   function handleReset() {
     setOrigin("");
     setDestination("");
-    setGuesses({ driving: "", walking: "", bicycling: "", transit: "" });
+    setGuesses({
+      driving:   { h: "", m: "" },
+      walking:   { h: "", m: "" },
+      bicycling: { h: "", m: "" },
+      transit:   { h: "", m: "" },
+    });
     setActuals(null);
     setError("");
   }
@@ -103,8 +118,8 @@ function FreeMode() {
     ? MODES.reduce((sum, m) => {
         const actual = actuals[m.key];
         if (actual === null) return sum;
-        return sum + calcScore(Number(guesses[m.key]), actual);
-        }, 0)
+        return sum + calcScore(toMinutes(guesses[m.key].h, guesses[m.key].m), actual);
+      }, 0)
     : 0;
 
   return (
@@ -129,17 +144,27 @@ function FreeMode() {
             onChange={e => setDestination(e.target.value)}
             style={inputStyle}
           />
-          <p style={{ fontWeight: 500, marginBottom: 12 }}>Your guesses (minutes):</p>
+          <p style={{ fontWeight: 500, marginBottom: 12 }}>Your guesses:</p>
           {MODES.map(m => (
-            <div key={m.key} style={{ display: "flex", alignItems: "center", marginBottom: 12, gap: 12 }}>
+            <div key={m.key} style={{ display: "flex", alignItems: "center", marginBottom: 12, gap: 8 }}>
               <span style={{ width: 90 }}>{m.emoji} {m.label}</span>
               <input
                 type="number"
-                min="1"
-                placeholder="?"
-                value={guesses[m.key]}
-                onChange={e => setGuesses({ ...guesses, [m.key]: e.target.value })}
-                style={{ ...inputStyle, width: 80, marginBottom: 0 }}
+                min="0"
+                placeholder="0"
+                value={guesses[m.key].h}
+                onChange={e => setGuesses({ ...guesses, [m.key]: { ...guesses[m.key], h: e.target.value } })}
+                style={{ ...inputStyle, width: 55, marginBottom: 0 }}
+              />
+              <span style={{ color: "#999", fontSize: 13 }}>hr</span>
+              <input
+                type="number"
+                min="0"
+                max="59"
+                placeholder="0"
+                value={guesses[m.key].m}
+                onChange={e => setGuesses({ ...guesses, [m.key]: { ...guesses[m.key], m: e.target.value } })}
+                style={{ ...inputStyle, width: 55, marginBottom: 0 }}
               />
               <span style={{ color: "#999", fontSize: 13 }}>min</span>
             </div>
@@ -154,24 +179,24 @@ function FreeMode() {
           <p style={{ fontWeight: 500, marginBottom: 16 }}>{origin} → {destination}</p>
           {MODES.map(m => {
             const actual = actuals[m.key];
-            const guess = Number(guesses[m.key]);
+            const guess = toMinutes(guesses[m.key].h, guesses[m.key].m);
             const score = actual === null ? null : calcScore(guess, actual);
             return (
-                <div key={m.key} style={{ background: "#f5f5f5", borderRadius: 8, padding: "12px 16px", marginBottom: 12 }}>
+              <div key={m.key} style={{ background: "#f5f5f5", borderRadius: 8, padding: "12px 16px", marginBottom: 12 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                    <span style={{ fontWeight: 500 }}>{m.emoji} {m.label}</span>
-                    <span style={{ fontWeight: 500, color: score === null ? "#999" : scoreColor(score) }}>
+                  <span style={{ fontWeight: 500 }}>{m.emoji} {m.label}</span>
+                  <span style={{ fontWeight: 500, color: score === null ? "#999" : scoreColor(score) }}>
                     {score === null ? "N/A" : `${score} pts`}
-                    </span>
+                  </span>
                 </div>
                 <div style={{ display: "flex", gap: 24, fontSize: 14, color: "#444" }}>
-                    <span>Your guess: <strong>{guess} min</strong></span>
-                    <span>Actual: <strong>{actual === null ? "No route" : `${actual} min`}</strong></span>
+                  <span>Your guess: <strong>{guess} min</strong></span>
+                  <span>Actual: <strong>{actual === null ? "No route" : `${actual} min`}</strong></span>
                 </div>
                 {score !== null && <ScoreScale score={score} />}
-                </div>
+              </div>
             );
-            })}
+          })}
           <div style={{ background: "#111", color: "#fff", borderRadius: 8, padding: "16px", textAlign: "center", margin: "20px 0" }}>
             <div style={{ fontSize: 13, marginBottom: 4, color: "#aaa" }}>Total score</div>
             <div style={{ fontSize: 48, fontWeight: 600 }}>{totalScore}</div>

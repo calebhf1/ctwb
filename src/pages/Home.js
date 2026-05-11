@@ -5,7 +5,7 @@ function Home() {
   return (
     <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
       <h1 style={{ fontSize: 28, marginBottom: 4 }}>CTWB</h1>
-      <p style={{ color: "#666", marginBottom: 20 }}>Guess the travel time between two places.</p>
+      <p style={{ color: "#666", marginBottom: 20 }}>Guess the current travel time between two places.</p>
 
       <img
         src="/og-image.png"
