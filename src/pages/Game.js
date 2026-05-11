@@ -4,9 +4,9 @@ import supabase from "../supabase";
 
 const MODES = [
   { key: "driving",   label: "Car",     emoji: "🚗" },
+  { key: "transit",   label: "Transit", emoji: "🚌" },
   { key: "walking",   label: "Walk",    emoji: "🚶" },
   { key: "bicycling", label: "Bike",    emoji: "🚲" },
-  { key: "transit",   label: "Transit", emoji: "🚌" },
 ];
 
 async function fetchTravelTime(origin, destination, mode) {
@@ -165,9 +165,9 @@ function Game() {
         game_id: gameId,
         round_number: currentRound + 1,
         driving_guess:  toMinutes(guesses.driving.h,   guesses.driving.m),
+        transit_guess:  toMinutes(guesses.transit.h,   guesses.transit.m),
         walking_guess:  toMinutes(guesses.walking.h,   guesses.walking.m),
         cycling_guess:  toMinutes(guesses.bicycling.h, guesses.bicycling.m),
-        transit_guess:  toMinutes(guesses.transit.h,   guesses.transit.m),
         driving_actual:  results.driving,
         walking_actual:  results.walking,
         cycling_actual:  results.bicycling,
@@ -191,9 +191,9 @@ function Game() {
       setCurrentRound(currentRound + 1);
       setGuesses({
         driving:   { h: "", m: "" },
+        transit:   { h: "", m: "" },
         walking:   { h: "", m: "" },
         bicycling: { h: "", m: "" },
-        transit:   { h: "", m: "" },
       });
       setActuals(null);
     }

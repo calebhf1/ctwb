@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 
 const MODES = [
   { key: "driving",   label: "Car",     emoji: "🚗" },
+  { key: "transit",   label: "Transit", emoji: "🚌" },
   { key: "walking",   label: "Walk",    emoji: "🚶" },
   { key: "bicycling", label: "Bike",    emoji: "🚲" },
-  { key: "transit",   label: "Transit", emoji: "🚌" },
 ];
 
 async function fetchTravelTime(origin, destination, mode) {
@@ -76,9 +76,9 @@ function FreeMode() {
   const [destination, setDestination] = useState("");
   const [guesses, setGuesses] = useState({
     driving:   { h: "", m: "" },
+    transit:   { h: "", m: "" },
     walking:   { h: "", m: "" },
     bicycling: { h: "", m: "" },
-    transit:   { h: "", m: "" },
   });
   const [actuals, setActuals] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -106,9 +106,9 @@ function FreeMode() {
     setDestination("");
     setGuesses({
       driving:   { h: "", m: "" },
+      transit:   { h: "", m: "" },
       walking:   { h: "", m: "" },
       bicycling: { h: "", m: "" },
-      transit:   { h: "", m: "" },
     });
     setActuals(null);
     setError("");
