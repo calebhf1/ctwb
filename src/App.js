@@ -31,16 +31,11 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  function calcScore(guess, actual) {
-    const diff = Math.abs(guess - actual);
-    if (diff <= 1)  return 100;
-    if (diff <= 3)  return 85;
-    if (diff <= 5)  return 70;
-    if (diff <= 10) return 50;
-    if (diff <= 15) return 30;
-    if (diff <= 20) return 10;
-    return 0;
-  }
+ function calcScore(guess, actual) {
+  if (guess === actual) return 0;
+  const ratio = Math.abs(guess - actual) / actual;
+  return Math.round(ratio * 100);
+}
 
   async function handleSubmit() {
     if (!origin || !destination) return setError("Enter both locations.");
@@ -138,7 +133,7 @@ function App() {
           <div style={{ background: "#111", color: "#fff", borderRadius: 8, padding: "16px", textAlign: "center", margin: "20px 0" }}>
             <div style={{ fontSize: 13, marginBottom: 4, color: "#aaa" }}>Total score</div>
             <div style={{ fontSize: 48, fontWeight: 600 }}>{totalScore}</div>
-            <div style={{ fontSize: 13, color: "#aaa" }}>out of 400</div>
+            <div style={{ fontSize: 13, color: "#aaa" }}>lower is better</div>
           </div>
 
           <button onClick={handleReset} style={btnStyle}>Play again</button>
@@ -149,8 +144,8 @@ function App() {
 }
 
 function scoreColor(score) {
-  if (score >= 85) return "#1a7a4a";
-  if (score >= 50) return "#b07d00";
+  if (score <= 10) return "#1a7a4a";
+  if (score <= 30) return "#b07d00";
   return "#b03030";
 }
 
