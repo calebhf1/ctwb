@@ -23,6 +23,18 @@ function Leaderboard() {
 
   useEffect(() => {
     async function loadLeaderboard() {
+      const CITY_TIMEZONES = {
+        "Chicago": "America/Chicago",
+        "New York": "America/New_York",
+        "Los Angeles": "America/Los_Angeles",
+        "San Francisco": "America/Los_Angeles",
+        "San Diego": "America/Los_Angeles",
+        "Houston": "America/Chicago",
+        "Philadelphia": "America/New_York",
+        "Washington DC": "America/New_York",
+        "Boston": "America/New_York",
+        "Miami": "America/New_York",
+      };
       const { data: gameData } = await supabase
         .from("games")
         .select("*")
