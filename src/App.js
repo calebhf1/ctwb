@@ -126,6 +126,7 @@ function App() {
                   <span>Your guess: <strong>{guess} min</strong></span>
                   <span>Actual: <strong>{actual} min</strong></span>
                 </div>
+                <ScoreScale score={score} />
               </div>
             );
           })}
@@ -172,5 +173,35 @@ const btnStyle = {
   cursor: "pointer",
   marginTop: 8,
 };
+
+function ScoreScale({ score }) {
+  const max = 150;
+  const capped = Math.min(score, max);
+  const pct = (capped / max) * 100;
+
+  return (
+    <div style={{ margin: "8px 0 4px" }}>
+      <div style={{ position: "relative", height: 10, borderRadius: 5, background: "linear-gradient(to right, #1a7a4a, #f0c040, #b03030)" }}>
+        <div style={{
+          position: "absolute",
+          top: "50%",
+          left: `${pct}%`,
+          transform: "translate(-50%, -50%)",
+          width: 14,
+          height: 14,
+          borderRadius: "50%",
+          background: "#3b82f6",
+          border: "2px solid white",
+          boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
+        }} />
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#999", marginTop: 4 }}>
+        <span>🎯 perfect</span>
+        <span>ok</span>
+        <span>way off</span>
+      </div>
+    </div>
+  );
+}
 
 export default App;
