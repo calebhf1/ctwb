@@ -246,6 +246,9 @@ function Game() {
         <>
           <p style={{ fontWeight: 500, marginBottom: 4 }}>Route</p>
           <p style={{ marginBottom: 12, fontSize: 15 }}>{route.origin} → {route.destination}</p>
+          <p style={{ fontSize: 10, color: "#999", wordBreak: "break-all" }}>
+          {`https://maps.googleapis.com/maps/api/staticmap?size=480x200&markers=color:red|label:A|${route.origin}&markers=color:blue|label:B|${route.destination}&key=${process.env.REACT_APP_GOOGLE_MAPS_KEY}`}
+          </p>
           <RouteMap origin={route.origin} destination={route.destination} />
           <p style={{ fontWeight: 500, marginBottom: 12 }}>Your guesses:</p>
           {MODES.map(m => (
