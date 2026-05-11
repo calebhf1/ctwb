@@ -134,7 +134,13 @@ function App() {
           <div style={{ background: "#111", color: "#fff", borderRadius: 8, padding: "16px", textAlign: "center", margin: "20px 0" }}>
             <div style={{ fontSize: 13, marginBottom: 4, color: "#aaa" }}>Total score</div>
             <div style={{ fontSize: 48, fontWeight: 600 }}>{totalScore}</div>
-            <div style={{ fontSize: 13, color: "#aaa" }}>lower is better</div>
+            <div style={{ fontSize: 13, color: "#aaa", marginTop: 4 }}>
+              {totalScore <= 20 ? "🎯 You don't need maps. Maps need you." :
+              totalScore <= 50 ? "🙌 You really know your way around town!" :
+              totalScore <= 80 ? "👍 Solid effort, not bad at all." :
+              totalScore <= 120 ? "😐 Average — keep exploring!" :
+              "😬 Time to get out more."}
+            </div>
           </div>
 
           <button onClick={handleReset} style={btnStyle}>Play again</button>
