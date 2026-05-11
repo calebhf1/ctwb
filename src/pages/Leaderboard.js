@@ -8,6 +8,18 @@ function Leaderboard() {
   const [game, setGame] = useState(null);
   const [scores, setScores] = useState([]);
   const [loading, setLoading] = useState(true);
+  const CITY_TIMEZONES = {
+  "Chicago": "America/Chicago",
+  "New York": "America/New_York",
+  "Los Angeles": "America/Los_Angeles",
+  "San Francisco": "America/Los_Angeles",
+  "San Diego": "America/Los_Angeles",
+  "Houston": "America/Chicago",
+  "Philadelphia": "America/New_York",
+  "Washington DC": "America/New_York",
+  "Boston": "America/New_York",
+  "Miami": "America/New_York",
+};
 
   useEffect(() => {
     async function loadLeaderboard() {
@@ -31,8 +43,14 @@ function Leaderboard() {
         const playerGuesses = guesses.filter(g => g.player_id === player.id);
         const total = playerGuesses.reduce((sum, g) => sum + g.round_score, 0);
         const lastGuess = playerGuesses.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+        const timezone = CITY_TIMEZONES[gameData.city] || "America/Chicago";
         const playedAt = lastGuess ? new Date(lastGuess.created_at).toLocaleString("en-US", {
-          month: "short", day: "numeric", hour: "numeric", minute: "2-digit", hour12: true
+        timeZone: timezone,
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
         }) : null;
         return { username: player.username, total, rounds: playerGuesses.length, playedAt };
       });

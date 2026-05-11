@@ -2,9 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const MODES = [
-  { key: "driving",   label: "Driving",  emoji: "🚗" },
-  { key: "walking",   label: "Walking",  emoji: "🚶" },
-  { key: "bicycling", label: "Cycling",  emoji: "🚲" },
+  { key: "driving",   label: "Car",  emoji: "🚗" },
+  { key: "walking",   label: "Walk",  emoji: "🚶" },
+  { key: "bicycling", label: "Bike",  emoji: "🚲" },
   { key: "transit",   label: "Transit",  emoji: "🚌" },
 ];
 
@@ -12,7 +12,9 @@ async function fetchTravelTime(origin, destination, mode) {
   const params = new URLSearchParams({ origins: origin, destinations: destination, mode });
   const response = await fetch(`/api/maps?${params}`);
   const data = await response.json();
-  const seconds = data.rows[0].elements[0].duration.value;
+  const element = data.rows[0].elements[0];
+  if (element.status !== "OK") return null;
+  const seconds = element.duration.value;
   return Math.round(seconds / 60);
 }
 
@@ -98,7 +100,11 @@ function FreeMode() {
   }
 
   const totalScore = actuals
-    ? MODES.reduce((sum, m) => sum + calcScore(Number(guesses[m.key]), actuals[m.key]), 0)
+    ? MODES.reduce((sum, m) => {
+        const actual = actuals[m.key];
+        if (actual === null) return sum;
+        return sum + calcScore(Number(guesses[m.key]), actual);
+        }, 0)
     : 0;
 
   return (
@@ -107,7 +113,7 @@ function FreeMode() {
         <button onClick={() => navigate('/')} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, padding: 0 }}>←</button>
         <h1 style={{ fontSize: 28, margin: 0 }}>Free mode</h1>
       </div>
-      <p style={{ color: "#666", marginBottom: 24 }}>Enter any two places and guess the times.</p>
+      <p style={{ color: "#666", marginBottom: 24 }}>Enter any two places and guess the current travel times.</p>
 
       {!actuals ? (
         <>
@@ -149,21 +155,23 @@ function FreeMode() {
           {MODES.map(m => {
             const actual = actuals[m.key];
             const guess = Number(guesses[m.key]);
-            const score = calcScore(guess, actual);
+            const score = actual === null ? null : calcScore(guess, actual);
             return (
-              <div key={m.key} style={{ background: "#f5f5f5", borderRadius: 8, padding: "12px 16px", marginBottom: 12 }}>
+                <div key={m.key} style={{ background: "#f5f5f5", borderRadius: 8, padding: "12px 16px", marginBottom: 12 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontWeight: 500 }}>{m.emoji} {m.label}</span>
-                  <span style={{ fontWeight: 500, color: scoreColor(score) }}>{score} pts</span>
+                    <span style={{ fontWeight: 500 }}>{m.emoji} {m.label}</span>
+                    <span style={{ fontWeight: 500, color: score === null ? "#999" : scoreColor(score) }}>
+                    {score === null ? "N/A" : `${score} pts`}
+                    </span>
                 </div>
                 <div style={{ display: "flex", gap: 24, fontSize: 14, color: "#444" }}>
-                  <span>Your guess: <strong>{guess} min</strong></span>
-                  <span>Actual: <strong>{actual} min</strong></span>
+                    <span>Your guess: <strong>{guess} min</strong></span>
+                    <span>Actual: <strong>{actual === null ? "No route" : `${actual} min`}</strong></span>
                 </div>
-                <ScoreScale score={score} />
-              </div>
+                {score !== null && <ScoreScale score={score} />}
+                </div>
             );
-          })}
+            })}
           <div style={{ background: "#111", color: "#fff", borderRadius: 8, padding: "16px", textAlign: "center", margin: "20px 0" }}>
             <div style={{ fontSize: 13, marginBottom: 4, color: "#aaa" }}>Total score</div>
             <div style={{ fontSize: 48, fontWeight: 600 }}>{totalScore}</div>

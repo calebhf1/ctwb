@@ -3,9 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import supabase from "../supabase";
 
 const MODES = [
-  { key: "driving",   label: "Driving",  emoji: "🚗" },
-  { key: "walking",   label: "Walking",  emoji: "🚶" },
-  { key: "bicycling", label: "Cycling",  emoji: "🚲" },
+  { key: "driving",   label: "Car",  emoji: "🚗" },
+  { key: "walking",   label: "Walk",  emoji: "🚶" },
+  { key: "bicycling", label: "Bike",  emoji: "🚲" },
   { key: "transit",   label: "Transit",  emoji: "🚌" },
 ];
 
@@ -13,7 +13,9 @@ async function fetchTravelTime(origin, destination, mode) {
   const params = new URLSearchParams({ origins: origin, destinations: destination, mode });
   const response = await fetch(`/api/maps?${params}`);
   const data = await response.json();
-  const seconds = data.rows[0].elements[0].duration.value;
+  const element = data.rows[0].elements[0];
+  if (element.status !== "OK") return null;
+  const seconds = element.duration.value;
   return Math.round(seconds / 60);
 }
 
@@ -122,7 +124,7 @@ function Game() {
 
   async function handleSubmitRound() {
     for (const m of MODES) {
-      if (!guesses[m.key] || isNaN(guesses[m.key])) {
+      if (guesses[m.key] === "" || isNaN(guesses[m.key])) {
         return setError(`Enter a guess for ${m.label}.`);
       }
     }
@@ -132,8 +134,10 @@ function Game() {
     try {
       const route = routes[currentRound];
       const results = await fetchAllModes(route.origin, route.destination);
-      const roundScore = MODES.reduce((sum, m) => sum + calcScore(Number(guesses[m.key]), results[m.key]), 0);
-
+      const roundScore = MODES.reduce((sum, m) => {
+        if (results[m.key] === null) return sum;
+        return sum + calcScore(Number(guesses[m.key]), results[m.key]);
+        }, 0);
       await supabase.from("guesses").insert({
         player_id: Number(playerId),
         game_id: gameId,
@@ -241,21 +245,23 @@ function Game() {
           {MODES.map(m => {
             const actual = actuals[m.key];
             const guess = Number(guesses[m.key]);
-            const score = calcScore(guess, actual);
+            const score = actual === null ? null : calcScore(guess, actual);
             return (
-              <div key={m.key} style={{ background: "#f5f5f5", borderRadius: 8, padding: "12px 16px", marginBottom: 12 }}>
+                <div key={m.key} style={{ background: "#f5f5f5", borderRadius: 8, padding: "12px 16px", marginBottom: 12 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontWeight: 500 }}>{m.emoji} {m.label}</span>
-                  <span style={{ fontWeight: 500, color: scoreColor(score) }}>{score} pts</span>
+                    <span style={{ fontWeight: 500 }}>{m.emoji} {m.label}</span>
+                    <span style={{ fontWeight: 500, color: score === null ? "#999" : scoreColor(score) }}>
+                    {score === null ? "N/A" : `${score} pts`}
+                    </span>
                 </div>
                 <div style={{ display: "flex", gap: 24, fontSize: 14, color: "#444" }}>
-                  <span>Your guess: <strong>{guess} min</strong></span>
-                  <span>Actual: <strong>{actual} min</strong></span>
+                    <span>Your guess: <strong>{guess} min</strong></span>
+                    <span>Actual: <strong>{actual === null ? "No route" : `${actual} min`}</strong></span>
                 </div>
-                <ScoreScale score={score} />
-              </div>
+                {score !== null && <ScoreScale score={score} />}
+                </div>
             );
-          })}
+            })}
 
           <div style={{ background: "#111", color: "#fff", borderRadius: 8, padding: "16px", textAlign: "center", margin: "20px 0" }}>
             <div style={{ fontSize: 13, marginBottom: 4, color: "#aaa" }}>Round {currentRound + 1} score</div>
