@@ -71,6 +71,19 @@ function ScoreScale({ score }) {
   );
 }
 
+function RouteMap({ origin, destination }) {
+  const key = process.env.REACT_APP_GOOGLE_MAPS_KEY;
+  const markers = `markers=color:red%7Clabel:A%7C${encodeURIComponent(origin)}&markers=color:blue%7Clabel:B%7C${encodeURIComponent(destination)}`;
+  const url = `https://maps.googleapis.com/maps/api/staticmap?size=480x200&maptype=roadmap&${markers}&key=${key}`;
+  return (
+    <img
+      src={url}
+      alt="Route map"
+      style={{ width: "100%", borderRadius: 8, marginBottom: 16 }}
+    />
+  );
+}
+
 function Game() {
   const { gameId } = useParams();
   const navigate = useNavigate();
@@ -232,7 +245,8 @@ function Game() {
       {!actuals ? (
         <>
           <p style={{ fontWeight: 500, marginBottom: 4 }}>Route</p>
-          <p style={{ marginBottom: 20, fontSize: 15 }}>{route.origin} → {route.destination}</p>
+          <p style={{ marginBottom: 12, fontSize: 15 }}>{route.origin} → {route.destination}</p>
+          <RouteMap origin={route.origin} destination={route.destination} />
           <p style={{ fontWeight: 500, marginBottom: 12 }}>Your guesses:</p>
           {MODES.map(m => (
             <div key={m.key} style={{ display: "flex", alignItems: "center", marginBottom: 12, gap: 8 }}>
