@@ -24,7 +24,9 @@ function CreateGame() {
 
     try {
       const gameId = generateGameId(city);
-      const routes = CITIES[city];
+      const allRoutes = CITIES[city];
+      const shuffled = [...allRoutes].sort(() => Math.random() - 0.5);
+      const routes = shuffled.slice(0, 3);
 
       const { error: gameError } = await supabase
         .from("games")
