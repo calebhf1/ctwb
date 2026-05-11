@@ -9,11 +9,17 @@ function Home() {
 
       <img
         src="/og-image.png"
-        alt="CTWB — Can You Beat the Map?"
+        alt="CTWB"
         style={{ width: "100%", borderRadius: 12, marginBottom: 24 }}
       />
 
-      <button onClick={() => navigate('/create')} style={btnStyle}>Create a game</button>
+      <button onClick={() => navigate('/create')} style={btnStyle}>
+        🎮 Create a multiplayer game
+      </button>
+
+      <button onClick={() => navigate('/free')} style={{ ...btnStyle, background: "#fff", color: "#111", border: "1px solid #ddd" }}>
+        🗺️ Free mode — pick your own route
+      </button>
     </div>
   );
 }
