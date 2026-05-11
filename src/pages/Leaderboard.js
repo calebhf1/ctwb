@@ -30,7 +30,11 @@ function Leaderboard() {
       const totals = players.map(player => {
         const playerGuesses = guesses.filter(g => g.player_id === player.id);
         const total = playerGuesses.reduce((sum, g) => sum + g.round_score, 0);
-        return { username: player.username, total, rounds: playerGuesses.length };
+        const lastGuess = playerGuesses.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+        const playedAt = lastGuess ? new Date(lastGuess.created_at).toLocaleString("en-US", {
+          month: "short", day: "numeric", hour: "numeric", minute: "2-digit", hour12: true
+        }) : null;
+        return { username: player.username, total, rounds: playerGuesses.length, playedAt };
       });
 
       totals.sort((a, b) => a.total - b.total);
@@ -66,7 +70,9 @@ function Leaderboard() {
             <span style={{ fontSize: 20 }}>{medals[i] || `${i + 1}.`}</span>
             <div>
               <div style={{ fontWeight: 600, fontSize: 16 }}>{s.username}</div>
-              <div style={{ fontSize: 12, opacity: 0.6 }}>{s.rounds} round{s.rounds !== 1 ? "s" : ""} played</div>
+              <div style={{ fontSize: 12, opacity: 0.6 }}>
+                {s.rounds} round{s.rounds !== 1 ? "s" : ""} · {s.playedAt}
+              </div>
             </div>
           </div>
           <div style={{ textAlign: "right" }}>
