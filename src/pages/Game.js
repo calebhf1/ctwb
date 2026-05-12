@@ -9,6 +9,25 @@ const MODES = [
   { key: "bicycling", label: "Bike",    emoji: "🚲" },
 ];
 
+const CITY_EMOJIS = {
+  "Chicago": "🏙️",
+  "New York": "🗽",
+  "Los Angeles": "🎬",
+  "San Francisco": "🌉",
+  "San Diego": "🌊",
+  "Houston": "🚀",
+  "Philadelphia": "🔔",
+  "Washington DC": "🏛️",
+  "Boston": "🦞",
+  "Miami": "🌴",
+  "St Croix, USVI": "🌺",
+  "Geneva": "🕊️",
+  "Lausanne": "🏔️",
+  "Bern": "🐻",
+  "Zurich": "🏦",
+  "Basel": "🎨",
+};
+
 async function fetchTravelTime(origin, destination, mode) {
   const params = new URLSearchParams({ origins: origin, destinations: destination, mode });
   const response = await fetch(`/api/maps?${params}`);
@@ -42,6 +61,14 @@ function scoreColor(score) {
   return "#b03030";
 }
 
+function getScoreMessage(score) {
+  if (score <= 15) return "legendary 🎯";
+  if (score <= 40) return "impressive!";
+  if (score <= 80) return "solid!";
+  if (score <= 130) return "not bad!";
+  return "keep exploring";
+}
+
 function ScoreScale({ score }) {
   const max = 120;
   const capped = Math.min(score, max);
@@ -73,28 +100,24 @@ function RouteMap({ origin, destination }) {
 function ResultsCard({ city, routes, roundScores, allActuals, allGuesses }) {
   const [copied, setCopied] = useState(false);
   const totalScore = roundScores.reduce((a, b) => a + b, 0);
+  const cityEmoji = CITY_EMOJIS[city] || "📍";
 
-  function getModeEmoji(score) {
-    if (score === null) return "⬜";
-    if (score <= 15) return "🟩";
-    if (score <= 50) return "🟨";
-    return "🟥";
-  }
+  const roundLines = roundScores.map((roundScore, i) => {
+    const modeLines = MODES.map(m => {
+      const actual = allActuals[i]?.[m.key];
+      const guess = allGuesses[i] ? toMinutes(allGuesses[i][m.key].h, allGuesses[i][m.key].m) : 0;
+      const score = actual === null ? null : calcScore(guess, actual);
+      return `${m.emoji} ${score === null ? "N/A" : score + " pts"}`;
+    });
+    const header = routes.length > 1 ? `Round ${i + 1}:\n` : "";
+    return `${header}${modeLines[0]}  ${modeLines[1]}\n${modeLines[2]}  ${modeLines[3]}`;
+  });
 
   const lines = [
-    `CTWB — ${city}`,
-    `${routes.length} round${routes.length === 1 ? "" : "s"} · ${totalScore} pts`,
+    `CTWB — ${city} ${cityEmoji}`,
     "",
-    ...roundScores.map((roundScore, i) => {
-      const modeEmojis = MODES.map(m => {
-        const actual = allActuals[i]?.[m.key];
-        const guess = allGuesses[i] ? toMinutes(allGuesses[i][m.key].h, allGuesses[i][m.key].m) : 0;
-        const score = actual === null ? null : calcScore(guess, actual);
-        return getModeEmoji(score);
-      });
-      return `Round ${i + 1}: ${modeEmojis.join("")} · ${roundScore} pts`;
-    }),
-    "",
+    ...roundLines.flatMap(r => [r, ""]),
+    `Total: ${totalScore} — ${getScoreMessage(totalScore)}`,
     "playctwb.vercel.app",
   ];
 
@@ -224,7 +247,12 @@ function Game() {
       navigate(`/leaderboard/${gameId}`);
     } else {
       setCurrentRound(currentRound + 1);
-      setGuesses({ driving: { h: "", m: "" }, transit: { h: "", m: "" }, walking: { h: "", m: "" }, bicycling: { h: "", m: "" } });
+      setGuesses({
+        driving:   { h: "", m: "" },
+        transit:   { h: "", m: "" },
+        walking:   { h: "", m: "" },
+        bicycling: { h: "", m: "" },
+      });
       setActuals(null);
     }
   }
@@ -322,6 +350,11 @@ function Game() {
             <div style={{ fontSize: 48, fontWeight: 600 }}>{roundScores[roundScores.length - 1]}</div>
             {roundScores.length > 1 && (
               <div style={{ fontSize: 13, color: "#aaa", marginTop: 4 }}>Running total: {totalScore}</div>
+            )}
+            {isLastRound && (
+              <div style={{ fontSize: 14, color: "#aaa", marginTop: 8 }}>
+                {getScoreMessage(totalScore)}
+              </div>
             )}
           </div>
 
