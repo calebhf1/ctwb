@@ -4,9 +4,9 @@ import CITIES from "../cities";
 
 const MODES = [
   { key: "driving",   label: "Car",     emoji: "🚗" },
+  { key: "transit",   label: "Transit", emoji: "🚌" },
   { key: "walking",   label: "Walk",    emoji: "🚶" },
   { key: "bicycling", label: "Bike",    emoji: "🚲" },
-  { key: "transit",   label: "Transit", emoji: "🚌" },
 ];
 
 const COUNTRIES = {
@@ -49,22 +49,11 @@ function scoreColor(score) {
   return "#b03030";
 }
 
-function MultiScoreScale({ players, actual }) {
+function MultiScoreScale({ players }) {
   const max = 120;
-  const actualPct = Math.min((actual / max) * 100, 100);
   return (
     <div style={{ margin: "8px 0 4px" }}>
       <div style={{ position: "relative", height: 10, borderRadius: 5, background: "linear-gradient(to right, #1a7a4a, #f0c040, #b03030)" }}>
-        <div style={{
-          position: "absolute",
-          top: 0,
-          left: `${actualPct}%`,
-          width: 2,
-          height: "100%",
-          background: "white",
-          opacity: 0.8,
-          transform: "translateX(-50%)",
-        }} />
         {players.map((p, i) => {
           const capped = Math.min(p.score, max);
           const pct = (capped / max) * 100;
@@ -99,11 +88,7 @@ function RouteMap({ origin, destination }) {
   const markers = `markers=color:red%7Clabel:A%7C${encodeURIComponent(origin)}&markers=color:blue%7Clabel:B%7C${encodeURIComponent(destination)}`;
   const url = `https://maps.googleapis.com/maps/api/staticmap?size=480x200&maptype=roadmap&${markers}&key=${key}`;
   return (
-    <img
-      src={url}
-      alt="Route map"
-      style={{ width: "100%", borderRadius: 8, marginBottom: 16 }}
-    />
+    <img src={url} alt="Route map" style={{ width: "100%", borderRadius: 8, marginBottom: 16 }} />
   );
 }
 
@@ -127,9 +112,9 @@ export default function PassAndPlay() {
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0);
   const [guesses, setGuesses] = useState({
     driving:   { h: "", m: "" },
+    transit:   { h: "", m: "" },
     walking:   { h: "", m: "" },
     bicycling: { h: "", m: "" },
-    transit:   { h: "", m: "" },
   });
   const [actuals, setActuals] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -180,7 +165,7 @@ export default function PassAndPlay() {
         setPhase(PHASES.ROUND_REVEAL);
       } else {
         setCurrentPlayerIndex(currentPlayerIndex + 1);
-        setGuesses({ driving: { h: "", m: "" }, walking: { h: "", m: "" }, bicycling: { h: "", m: "" }, transit: { h: "", m: "" } });
+        setGuesses({ driving: { h: "", m: "" }, transit: { h: "", m: "" }, walking: { h: "", m: "" }, bicycling: { h: "", m: "" } });
         setPhase(PHASES.HANDOFF);
       }
     } catch (e) {
@@ -201,7 +186,7 @@ export default function PassAndPlay() {
       setCurrentPlayerIndex(0);
       setRoundResults([]);
       setActuals(null);
-      setGuesses({ driving: { h: "", m: "" }, walking: { h: "", m: "" }, bicycling: { h: "", m: "" }, transit: { h: "", m: "" } });
+      setGuesses({ driving: { h: "", m: "" }, transit: { h: "", m: "" }, walking: { h: "", m: "" }, bicycling: { h: "", m: "" } });
       setPhase(PHASES.HANDOFF);
     }
   }
@@ -326,12 +311,8 @@ export default function PassAndPlay() {
 
         <div style={{ background: "#f5f5f5", borderRadius: 8, padding: "10px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 18 }}>🏆</span>
-          <span style={{ fontSize: 14, fontWeight: 600 }}>
-            {roundWinner.player} wins this round
-          </span>
-          <span style={{ fontSize: 13, color: scoreColor(roundWinner.score), marginLeft: "auto" }}>
-            {roundWinner.score} pts
-          </span>
+          <span style={{ fontSize: 14, fontWeight: 600 }}>{roundWinner.player} wins this round</span>
+          <span style={{ fontSize: 13, color: scoreColor(roundWinner.score), marginLeft: "auto" }}>{roundWinner.score} pts</span>
         </div>
 
         <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
@@ -369,7 +350,7 @@ export default function PassAndPlay() {
                   </span>
                 ))}
               </div>
-              {actual !== null && <MultiScoreScale players={playerScores} actual={actual} />}
+              {actual !== null && <MultiScoreScale players={playerScores} />}
             </div>
           );
         })}
