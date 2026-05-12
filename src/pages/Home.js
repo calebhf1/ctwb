@@ -105,6 +105,16 @@ function Home() {
         🤝 Pass & play
       </button>
 
+      <button onClick={() => navigate('/city-leaderboard/pick')} style={{
+        ...btnStyle,
+        background: "#fff",
+        color: "#111",
+        border: "1px solid #ddd",
+        marginBottom: 10,
+        }}>
+        🏆 Leaderboards
+        </button>
+
       <button onClick={() => navigate('/free')} style={{
         ...btnStyle,
         background: "#fff",

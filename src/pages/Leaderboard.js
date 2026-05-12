@@ -22,43 +22,70 @@ function Leaderboard() {
         "Washington DC": "America/New_York",
         "Boston": "America/New_York",
         "Miami": "America/New_York",
+        "St Croix": "America/St_Thomas",
+        "Geneva": "Europe/Zurich",
+        "Lausanne": "Europe/Zurich",
+        "Bern": "Europe/Zurich",
+        "Zurich": "Europe/Zurich",
+        "Basel": "Europe/Zurich",
       };
+
       const { data: gameData } = await supabase
         .from("games")
         .select("*")
         .eq("id", gameId)
         .single();
 
+      if (!gameData) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: allGames } = await supabase
+        .from("games")
+        .select("id")
+        .eq("city", gameData.city);
+
+      const gameIds = allGames.map(g => g.id);
+
       const { data: players } = await supabase
         .from("players")
         .select("*")
-        .eq("game_id", gameId);
+        .in("game_id", gameIds);
 
       const { data: guesses } = await supabase
         .from("guesses")
         .select("*")
-        .eq("game_id", gameId);
+        .in("game_id", gameIds);
 
-      const totals = players.map(player => {
+      const playerTotals = {};
+
+      players.forEach(player => {
         const playerGuesses = guesses.filter(g => g.player_id === player.id);
+        if (playerGuesses.length === 0) return;
+
         const total = playerGuesses.reduce((sum, g) => sum + g.round_score, 0);
-        const lastGuess = playerGuesses.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+        const lastGuess = [...playerGuesses].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
         const timezone = CITY_TIMEZONES[gameData.city] || "America/Chicago";
         const playedAt = lastGuess ? new Date(lastGuess.created_at).toLocaleString("en-US", {
-        timeZone: timezone,
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
+          timeZone: timezone,
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
         }) : null;
-        return { username: player.username, total, rounds: playerGuesses.length, playedAt };
+
+        const username = player.username;
+        if (!playerTotals[username] || total < playerTotals[username].total) {
+          playerTotals[username] = { username, total, rounds: playerGuesses.length, playedAt };
+        }
       });
 
-      totals.sort((a, b) => a.total - b.total);
+      const sorted = Object.values(playerTotals).sort((a, b) => a.total - b.total);
 
       setGame(gameData);
-      setScores(totals);
+      setScores(sorted);
       setLoading(false);
     }
     loadLeaderboard();
@@ -71,7 +98,8 @@ function Leaderboard() {
   return (
     <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
       <h1 style={{ fontSize: 28, marginBottom: 4 }}>Leaderboard</h1>
-      <p style={{ color: "#666", marginBottom: 24 }}>{game?.city} · {gameId}</p>
+      <p style={{ color: "#666", marginBottom: 4 }}>{game?.city} · All time best scores</p>
+      <p style={{ color: "#999", fontSize: 13, marginBottom: 24 }}>Best score per player across all {game?.city} games</p>
 
       {scores.map((s, i) => (
         <div key={s.username} style={{
