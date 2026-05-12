@@ -59,6 +59,11 @@ function Leaderboard() {
         .select("*")
         .in("game_id", gameIds);
 
+      const { data: dailyScores } = await supabase
+        .from("daily_scores")
+        .select("*")
+        .eq("city", gameData.city);
+
       const timezone = CITY_TIMEZONES[gameData.city] || "America/Chicago";
       const playerBest = {};
 
@@ -76,11 +81,25 @@ function Leaderboard() {
             minute: "2-digit",
             hour12: true,
           });
-
           if (!playerBest[username] || g.round_score < playerBest[username].total) {
             playerBest[username] = { username, total: g.round_score, playedAt };
           }
         });
+      });
+
+      (dailyScores || []).forEach(g => {
+        const username = g.username;
+        const playedAt = new Date(g.created_at + "Z").toLocaleString("en-US", {
+          timeZone: timezone,
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        });
+        if (!playerBest[username] || g.total_score < playerBest[username].total) {
+          playerBest[username] = { username, total: g.total_score, playedAt };
+        }
       });
 
       const sorted = Object.values(playerBest).sort((a, b) => a.total - b.total);
@@ -100,7 +119,7 @@ function Leaderboard() {
     <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
       <h1 style={{ fontSize: 28, marginBottom: 4 }}>Leaderboard</h1>
       <p style={{ color: "#666", marginBottom: 4 }}>{game?.city} · Best single round</p>
-      <p style={{ color: "#999", fontSize: 13, marginBottom: 24 }}>Best round score per player across all {game?.city} games</p>
+      <p style={{ color: "#999", fontSize: 13, marginBottom: 24 }}>Best round score per player across all {game?.city} games including daily challenges</p>
 
       {scores.map((s, i) => (
         <div key={s.username} style={{

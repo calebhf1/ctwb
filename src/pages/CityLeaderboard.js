@@ -45,7 +45,7 @@ function CityLeaderboard() {
   useEffect(() => {
     if (!city || city === "pick") return;
     loadScores(city);
-  }, [city]);
+  }, [city]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadScores(selectedCity) {
     setLoading(true);
@@ -56,73 +56,100 @@ function CityLeaderboard() {
       .select("id")
       .eq("city", selectedCity);
 
-    if (!allGames || allGames.length === 0) {
-      setScores([]);
-      setLoading(false);
-      return;
-    }
-
-    const gameIds = allGames.map(g => g.id);
-
-    const { data: players } = await supabase
-      .from("players")
-      .select("*")
-      .in("game_id", gameIds);
-
-    const { data: guesses } = await supabase
-      .from("guesses")
-      .select("*")
-      .in("game_id", gameIds);
-
-    const { data: routes } = await supabase
-      .from("routes")
-      .select("*")
-      .in("game_id", gameIds);
-
+    const gameIds = (allGames || []).map(g => g.id);
     const timezone = CITY_TIMEZONES[selectedCity] || "America/Chicago";
     const playerBest = {};
 
-    players.forEach(player => {
-      const playerGuesses = guesses.filter(g => g.player_id === player.id);
-      if (playerGuesses.length === 0) return;
+    if (gameIds.length > 0) {
+      const { data: players } = await supabase
+        .from("players")
+        .select("*")
+        .in("game_id", gameIds);
 
-      playerGuesses.forEach(g => {
-        const route = routes.find(r => r.game_id === g.game_id && r.round_number === g.round_number);
-        const playedAt = new Date(g.created_at + "Z").toLocaleString("en-US", {
-          timeZone: timezone,
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
-        });
+      const { data: guesses } = await supabase
+        .from("guesses")
+        .select("*")
+        .in("game_id", gameIds);
 
-        const roundDetail = {
-          round: g.round_number,
-          origin: route?.origin,
-          destination: route?.destination,
-          score: g.round_score,
-          driving_guess: g.driving_guess,
-          walking_guess: g.walking_guess,
-          cycling_guess: g.cycling_guess,
-          transit_guess: g.transit_guess,
-          driving_actual: g.driving_actual,
-          walking_actual: g.walking_actual,
-          cycling_actual: g.cycling_actual,
-          transit_actual: g.transit_actual,
-          playedAt,
-        };
+      const { data: routes } = await supabase
+        .from("routes")
+        .select("*")
+        .in("game_id", gameIds);
 
-        const username = player.username;
-        if (!playerBest[username] || g.round_score < playerBest[username].score) {
-          playerBest[username] = {
-            username,
+      (players || []).forEach(player => {
+        const playerGuesses = (guesses || []).filter(g => g.player_id === player.id);
+        if (playerGuesses.length === 0) return;
+
+        playerGuesses.forEach(g => {
+          const route = (routes || []).find(r => r.game_id === g.game_id && r.round_number === g.round_number);
+          const playedAt = new Date(g.created_at + "Z").toLocaleString("en-US", {
+            timeZone: timezone,
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+          });
+
+          const roundDetail = {
+            round: g.round_number,
+            origin: route?.origin,
+            destination: route?.destination,
             score: g.round_score,
+            driving_guess: g.driving_guess,
+            walking_guess: g.walking_guess,
+            cycling_guess: g.cycling_guess,
+            transit_guess: g.transit_guess,
+            driving_actual: g.driving_actual,
+            walking_actual: g.walking_actual,
+            cycling_actual: g.cycling_actual,
+            transit_actual: g.transit_actual,
             playedAt,
-            round: roundDetail,
           };
-        }
+
+          const username = player.username;
+          if (!playerBest[username] || g.round_score < playerBest[username].score) {
+            playerBest[username] = { username, score: g.round_score, playedAt, round: roundDetail, isDaily: false };
+          }
+        });
       });
+    }
+
+    const { data: dailyScores } = await supabase
+      .from("daily_scores")
+      .select("*")
+      .eq("city", selectedCity);
+
+    (dailyScores || []).forEach(g => {
+      const username = g.username;
+      const playedAt = new Date(g.created_at + "Z").toLocaleString("en-US", {
+        timeZone: timezone,
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+
+      const roundDetail = {
+        round: 1,
+        origin: g.origin,
+        destination: g.destination,
+        score: g.total_score,
+        driving_guess: g.driving_guess,
+        walking_guess: g.walking_guess,
+        cycling_guess: g.cycling_guess,
+        transit_guess: g.transit_guess,
+        driving_actual: g.driving_actual,
+        walking_actual: g.walking_actual,
+        cycling_actual: g.cycling_actual,
+        transit_actual: g.transit_actual,
+        playedAt,
+      };
+
+      if (!playerBest[username] || g.total_score < playerBest[username].score) {
+        playerBest[username] = { username, score: g.total_score, playedAt, round: roundDetail, isDaily: true };
+      }
     });
 
     setScores(Object.values(playerBest).sort((a, b) => a.score - b.score));
@@ -139,13 +166,13 @@ function CityLeaderboard() {
           <button onClick={() => setSelected(null)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, padding: 0 }}>←</button>
           <h1 style={{ fontSize: 28, margin: 0 }}>{selected.username}</h1>
         </div>
-        <p style={{ color: "#666", marginBottom: 24 }}>
-          {city} · Best single round · {selected.playedAt}
+        <p style={{ color: "#666", marginBottom: 4 }}>
+          {city} · {selected.isDaily ? "📅 Daily Challenge" : "🎮 Classic"} · {selected.playedAt}
         </p>
+        <p style={{ color: "#999", fontSize: 13, marginBottom: 20 }}>Best single round</p>
 
         <div style={{ background: "#f5f5f5", borderRadius: 8, padding: "12px 16px", marginBottom: 20 }}>
-          <p style={{ fontWeight: 600, marginBottom: 4 }}>Round {selected.round.round}</p>
-          <p style={{ fontSize: 13, color: "#666", marginBottom: 0 }}>
+          <p style={{ fontWeight: 600, marginBottom: 4, margin: 0 }}>
             {selected.round.origin} → {selected.round.destination}
           </p>
         </div>
@@ -200,7 +227,7 @@ function CityLeaderboard() {
         <button onClick={() => navigate('/')} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, padding: 0 }}>←</button>
         <h1 style={{ fontSize: 28, margin: 0 }}>Leaderboards</h1>
       </div>
-      <p style={{ color: "#666", marginBottom: 24 }}>Best single round per player, by city.</p>
+      <p style={{ color: "#666", marginBottom: 24 }}>Best single round per player, by city. Includes daily challenges.</p>
 
       <p style={{ fontWeight: 500, marginBottom: 8 }}>Select a country</p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
@@ -249,7 +276,9 @@ function CityLeaderboard() {
                 <span style={{ fontSize: 20 }}>{medals[i] || `${i + 1}.`}</span>
                 <div>
                   <div style={{ fontWeight: 600, fontSize: 16 }}>{s.username}</div>
-                  <div style={{ fontSize: 12, opacity: 0.6 }}>{s.playedAt}</div>
+                  <div style={{ fontSize: 12, opacity: 0.6 }}>
+                    {s.isDaily ? "📅 " : "🎮 "}{s.playedAt}
+                  </div>
                 </div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
