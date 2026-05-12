@@ -14,7 +14,7 @@ function Home() {
       />
 
       <button onClick={() => navigate('/create')} style={btnStyle}>
-        🎮 Create a multiplayer game
+        🎮 Classic Mode
       </button>
       <button onClick={() => navigate('/pass-and-play')} style={{ ...btnStyle, background: "#444" }}>
         🤝 Pass and play
