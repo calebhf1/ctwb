@@ -10,7 +10,19 @@ const MODES = [
 ];
 
 const DAILY_ROUTES = [
-  { date: "2026-05-12", city: "New York", origin: "Times Square, New York", destination: "Brooklyn Bridge, New York" },
+  { 
+    date: "2026-05-12", 
+    city: "New York", 
+    origin: "Times Square, New York", 
+    destination: "Brooklyn Bridge, New York",
+  },
+  { 
+    date: "2026-05-13", 
+    city: "Chicago", 
+    origin: "Saieh Hall for Economics, University of Chicago, Chicago", 
+    destination: "Department of Economics, Northwestern University, Evanston",
+    departureTime: 1747143000,
+  },
 ];
 
 const medals = ["🥇", "🥈", "🥉"];
@@ -45,20 +57,25 @@ function getCityTime(city) {
   });
 }
 
-async function fetchTravelTime(origin, destination, mode) {
+async function fetchTravelTime(origin, destination, mode, departureTime) {
   const params = new URLSearchParams({ origins: origin, destinations: destination, mode });
+  if (departureTime && mode === "driving") {
+    params.set("departure_time", departureTime);
+  }
   const response = await fetch(`/api/maps?${params}`);
   const data = await response.json();
   const element = data.rows[0].elements[0];
   if (element.status !== "OK") return null;
-  const seconds = element.duration.value;
+  const seconds = element.duration_in_traffic
+    ? element.duration_in_traffic.value
+    : element.duration.value;
   return Math.round(seconds / 60);
 }
 
-async function fetchAllModes(origin, destination) {
+async function fetchAllModes(origin, destination, departureTime) {
   const results = {};
   for (const mode of MODES) {
-    results[mode.key] = await fetchTravelTime(origin, destination, mode.key);
+    results[mode.key] = await fetchTravelTime(origin, destination, mode.key, departureTime);
   }
   return results;
 }
@@ -265,7 +282,7 @@ export default function DailyChallenge() {
     setSubmitting(true);
 
     try {
-      const results = await fetchAllModes(route.origin, route.destination);
+      const results = await fetchAllModes(route.origin, route.destination, route.departureTime);
       const score = MODES.reduce((sum, m) => {
         if (results[m.key] === null) return sum;
         return sum + calcScore(toMinutes(guesses[m.key].h, guesses[m.key].m), results[m.key]);
