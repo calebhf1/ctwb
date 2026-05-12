@@ -5,7 +5,7 @@ function Home() {
   return (
     <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
       <h1 style={{ fontSize: 28, marginBottom: 4 }}>CTWB</h1>
-      <p style={{ color: "#666", marginBottom: 20 }}>Guess the current travel time between two places.</p>
+      <p style={{ color: "#666", marginBottom: 20 }}>Guess the travel time between two places.</p>
 
       <img
         src="/og-image.png"
@@ -16,7 +16,9 @@ function Home() {
       <button onClick={() => navigate('/create')} style={btnStyle}>
         🎮 Create a multiplayer game
       </button>
-
+      <button onClick={() => navigate('/pass-and-play')} style={{ ...btnStyle, background: "#444" }}>
+        🤝 Pass and play
+      </button>
       <button onClick={() => navigate('/free')} style={{ ...btnStyle, background: "#fff", color: "#111", border: "1px solid #ddd" }}>
         🗺️ Free mode — pick your own route
       </button>
