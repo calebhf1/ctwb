@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import supabase from "../supabase";
 
 const MODES = [
   { key: "driving",   label: "Car",     emoji: "🚗" },
@@ -82,10 +83,8 @@ function RouteMap({ origin, destination }) {
   return <img src={url} alt="Route map" style={{ width: "100%", borderRadius: 8, marginBottom: 16 }} />;
 }
 
-function ResultsCard({ route, score, actuals, guesses }) {
+function ResultsCard({ route, score, actuals, guesses, today }) {
   const [copied, setCopied] = useState(false);
-
-  const today = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
   function getModeEmoji(modeScore) {
     if (modeScore === null) return "⬜";
@@ -109,16 +108,16 @@ function ResultsCard({ route, score, actuals, guesses }) {
   });
 
   const lines = [
-  `CTWB Daily Challenge 📅`,
-  `${today} · ${route.city}`,
-  "",
-  `${modeEmojis[0]}${modeEmojis[1]}${modeEmojis[2]}${modeEmojis[3]}`,
-  `${modeLines[0]}  ${modeLines[1]}`,
-  `${modeLines[2]}  ${modeLines[3]}`,
-  "",
-  `${score} pts — ${getScoreMessage(score)}`,
-  "playctwb.vercel.app/daily",
-];
+    `CTWB Daily Challenge 📅`,
+    `${today} · ${route.city}`,
+    "",
+    `${modeEmojis[0]}${modeEmojis[1]}${modeEmojis[2]}${modeEmojis[3]}`,
+    `${modeLines[0]}  ${modeLines[1]}`,
+    `${modeLines[2]}  ${modeLines[3]}`,
+    "",
+    `${score} pts — ${getScoreMessage(score)}`,
+    "playctwb.vercel.app/daily",
+  ];
 
   const text = lines.join("\n");
 
@@ -160,11 +159,15 @@ export default function DailyChallenge() {
   const navigate = useNavigate();
   const route = getTodayRoute();
   const storageKey = getTodayKey();
+  const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const todayDate = new Date().toISOString().slice(0, 10);
 
   const savedResult = (() => {
     try { return JSON.parse(localStorage.getItem(storageKey)); } catch { return null; }
   })();
 
+  const [username, setUsername] = useState(localStorage.getItem("ctwb_daily_username") || "");
+  const [usernameInput, setUsernameInput] = useState("");
   const [guesses, setGuesses] = useState(savedResult?.guesses || {
     driving:   { h: "", m: "" },
     transit:   { h: "", m: "" },
@@ -172,9 +175,34 @@ export default function DailyChallenge() {
     bicycling: { h: "", m: "" },
   });
   const [actuals, setActuals] = useState(savedResult?.actuals || null);
-  const [totalScore, setTotalScore] = useState(savedResult?.totalScore || 0);
+  const [totalScore, setTotalScore] = useState(savedResult?.totalScore ?? null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [loadingBoard, setLoadingBoard] = useState(false);
+
+  useEffect(() => {
+    if (actuals) loadLeaderboard();
+  }, [actuals]);
+
+  async function loadLeaderboard() {
+    setLoadingBoard(true);
+    const { data } = await supabase
+      .from("daily_scores")
+      .select("username, total_score, created_at")
+      .eq("date", todayDate)
+      .order("total_score", { ascending: true })
+      .limit(10);
+    setLeaderboard(data || []);
+    setLoadingBoard(false);
+  }
+
+  function handleSetUsername() {
+    if (!usernameInput.trim()) return setError("Please enter a username.");
+    localStorage.setItem("ctwb_daily_username", usernameInput.trim());
+    setUsername(usernameInput.trim());
+    setError("");
+  }
 
   async function handleSubmit() {
     for (const m of MODES) {
@@ -191,36 +219,87 @@ export default function DailyChallenge() {
         return sum + calcScore(toMinutes(guesses[m.key].h, guesses[m.key].m), results[m.key]);
       }, 0);
 
+      await supabase.from("daily_scores").insert({
+        username,
+        date: todayDate,
+        city: route.city,
+        origin: route.origin,
+        destination: route.destination,
+        driving_guess:  toMinutes(guesses.driving.h,   guesses.driving.m),
+        transit_guess:  toMinutes(guesses.transit.h,   guesses.transit.m),
+        walking_guess:  toMinutes(guesses.walking.h,   guesses.walking.m),
+        cycling_guess:  toMinutes(guesses.bicycling.h, guesses.bicycling.m),
+        driving_actual:  results.driving,
+        transit_actual:  results.transit,
+        walking_actual:  results.walking,
+        cycling_actual:  results.bicycling,
+        total_score: score,
+      });
+
       setActuals(results);
       setTotalScore(score);
-
       localStorage.setItem(storageKey, JSON.stringify({
         guesses, actuals: results, totalScore: score,
       }));
     } catch (e) {
+      console.error(e);
       setError("Something went wrong. Please try again.");
     }
     setSubmitting(false);
   }
 
-  const today = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  const medals = ["🥇", "🥈", "🥉"];
+
+  if (!username) {
+    return (
+      <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
+          <button onClick={() => navigate('/')} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, padding: 0 }}>←</button>
+          <h1 style={{ fontSize: 28, margin: 0 }}>Daily Challenge</h1>
+        </div>
+        <p style={{ color: "#666", marginBottom: 24 }}>{today}</p>
+
+        <div style={{ background: "#f0f9f4", border: "1px solid #c3e6d4", borderRadius: 8, padding: "12px 16px", marginBottom: 24 }}>
+          <p style={{ margin: 0, fontSize: 14, color: "#1a7a4a", fontWeight: 500 }}>
+            📅 One route. One shot. Come back tomorrow for a new challenge.
+          </p>
+        </div>
+
+        <p style={{ fontWeight: 500, marginBottom: 8 }}>Enter a username to join the leaderboard</p>
+        <input
+          placeholder="e.g. caleb"
+          value={usernameInput}
+          onChange={e => setUsernameInput(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && handleSetUsername()}
+          style={inputStyle}
+        />
+        {error && <p style={{ color: "red", fontSize: 13 }}>{error}</p>}
+        <button onClick={handleSetUsername} style={btnStyle}>Let's play →</button>
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
-        <button onClick={() => navigate('/')} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, padding: 0 }}>←</button>
-        <h1 style={{ fontSize: 28, margin: 0 }}>Daily Challenge</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <button onClick={() => navigate('/')} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, padding: 0 }}>←</button>
+          <h1 style={{ fontSize: 28, margin: 0 }}>Daily Challenge</h1>
+        </div>
+        <span style={{ fontSize: 13, color: "#999" }}>{username}</span>
       </div>
-      <p style={{ color: "#666", marginBottom: 20 }}>{today}</p>
+      <p style={{ color: "#666", marginBottom: 16 }}>{today}</p>
 
-      <div style={{ background: "#f0f9f4", border: "1px solid #c3e6d4", borderRadius: 8, padding: "12px 16px", marginBottom: 20 }}>
-        <p style={{ margin: 0, fontSize: 14, color: "#1a7a4a", fontWeight: 500 }}>
-          📅 One route. One shot. Come back tomorrow for a new challenge.
-        </p>
-      </div>
+      {!actuals && (
+        <div style={{ background: "#f0f9f4", border: "1px solid #c3e6d4", borderRadius: 8, padding: "12px 16px", marginBottom: 20 }}>
+          <p style={{ margin: 0, fontSize: 14, color: "#1a7a4a", fontWeight: 500 }}>
+            📅 One route. One shot. Come back tomorrow for a new challenge.
+          </p>
+        </div>
+      )}
 
       <p style={{ fontWeight: 500, marginBottom: 4 }}>Today's route</p>
-      <p style={{ fontSize: 13, color: "#666", marginBottom: 12 }}>{route.city}</p>
+      <p style={{ fontSize: 13, color: "#666", marginBottom: 8 }}>{route.city}</p>
       <p style={{ fontSize: 16, fontWeight: 500, marginBottom: 12 }}>{route.origin} → {route.destination}</p>
       <RouteMap origin={route.origin} destination={route.destination} />
 
@@ -280,9 +359,30 @@ export default function DailyChallenge() {
             score={totalScore}
             actuals={actuals}
             guesses={guesses}
+            today={today}
           />
 
-          <button onClick={() => navigate('/')} style={{ ...btnStyle, background: "#fff", color: "#111", border: "1px solid #ddd", marginTop: 4 }}>
+          <div style={{ marginBottom: 24 }}>
+            <p style={{ fontWeight: 600, marginBottom: 12, fontSize: 16 }}>Today's leaderboard</p>
+            {loadingBoard && <p style={{ color: "#999", fontSize: 14 }}>Loading…</p>}
+            {!loadingBoard && leaderboard.map((s, i) => (
+              <div key={s.username + i} style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                background: s.username === username ? "#f0f9f4" : "#f5f5f5",
+                border: s.username === username ? "1px solid #c3e6d4" : "none",
+                borderRadius: 8, padding: "12px 16px", marginBottom: 8,
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 18 }}>{medals[i] || `${i + 1}.`}</span>
+                  <span style={{ fontWeight: 600 }}>{s.username}</span>
+                  {s.username === username && <span style={{ fontSize: 12, color: "#1a7a4a" }}>you</span>}
+                </div>
+                <span style={{ fontWeight: 600, fontSize: 18 }}>{s.total_score}</span>
+              </div>
+            ))}
+          </div>
+
+          <button onClick={() => navigate('/')} style={{ ...btnStyle, background: "#fff", color: "#111", border: "1px solid #ddd" }}>
             ← Back to home
           </button>
         </>
