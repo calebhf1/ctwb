@@ -3,6 +3,11 @@ import { useNavigate } from "react-router-dom";
 import supabase from "../supabase";
 import CITIES from "../cities";
 
+const COUNTRIES = {
+  "🇺🇸 United States": ["Chicago", "New York", "Los Angeles", "San Francisco", "San Diego", "Houston", "Philadelphia", "Washington DC", "Boston", "Miami"],
+  "🇨🇭 Switzerland": ["Geneva", "Lausanne", "Bern", "Zurich", "Basel"],
+};
+
 function generateGameId(city) {
   const prefix = city.replace(/\s/g, "").slice(0, 3).toUpperCase();
   const suffix = Math.random().toString(36).slice(2, 6).toUpperCase();
@@ -10,13 +15,17 @@ function generateGameId(city) {
 }
 
 function CreateGame() {
+  const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  const availableCities = country ? COUNTRIES[country] : [];
+
   async function handleCreate() {
+    if (!country) return setError("Please select a country.");
     if (!city) return setError("Please select a city.");
     if (!username.trim()) return setError("Please enter a username.");
     setError("");
@@ -31,7 +40,6 @@ function CreateGame() {
       const { error: gameError } = await supabase
         .from("games")
         .insert({ id: gameId, city });
-
       if (gameError) throw gameError;
 
       const routeRows = routes.map((r, i) => ({
@@ -44,7 +52,6 @@ function CreateGame() {
       const { error: routeError } = await supabase
         .from("routes")
         .insert(routeRows);
-
       if (routeError) throw routeError;
 
       const { data: player, error: playerError } = await supabase
@@ -52,7 +59,6 @@ function CreateGame() {
         .insert({ game_id: gameId, username: username.trim() })
         .select()
         .single();
-
       if (playerError) throw playerError;
 
       localStorage.setItem("ctwb_player_id", player.id);
@@ -79,27 +85,53 @@ function CreateGame() {
         style={inputStyle}
       />
 
-      <p style={{ fontWeight: 500, marginBottom: 8 }}>Select a city</p>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 24 }}>
-        {Object.keys(CITIES).map(c => (
+      <p style={{ fontWeight: 500, marginBottom: 8 }}>Select a country</p>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+        {Object.keys(COUNTRIES).map(c => (
           <button
             key={c}
-            onClick={() => setCity(c)}
+            onClick={() => { setCountry(c); setCity(""); }}
             style={{
               padding: "12px",
               fontSize: 14,
               borderRadius: 8,
-              border: city === c ? "2px solid #111" : "1px solid #ddd",
-              background: city === c ? "#111" : "#fff",
-              color: city === c ? "#fff" : "#111",
+              border: country === c ? "2px solid #111" : "1px solid #ddd",
+              background: country === c ? "#111" : "#fff",
+              color: country === c ? "#fff" : "#111",
               cursor: "pointer",
-              fontWeight: city === c ? 600 : 400,
+              fontWeight: country === c ? 600 : 400,
             }}
           >
             {c}
           </button>
         ))}
       </div>
+
+      {country && (
+        <>
+          <p style={{ fontWeight: 500, marginBottom: 8 }}>Select a city</p>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 24 }}>
+            {availableCities.map(c => (
+              <button
+                key={c}
+                onClick={() => setCity(c)}
+                style={{
+                  padding: "12px",
+                  fontSize: 14,
+                  borderRadius: 8,
+                  border: city === c ? "2px solid #111" : "1px solid #ddd",
+                  background: city === c ? "#111" : "#fff",
+                  color: city === c ? "#fff" : "#111",
+                  cursor: "pointer",
+                  fontWeight: city === c ? 600 : 400,
+                }}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
       {error && <p style={{ color: "red", fontSize: 13, marginBottom: 12 }}>{error}</p>}
 
