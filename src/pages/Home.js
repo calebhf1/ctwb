@@ -20,9 +20,22 @@ function Home() {
         marginBottom: 24,
       }}>
         <div style={{ fontSize: 13, letterSpacing: 4, color: "#999", textTransform: "uppercase", marginBottom: 8 }}>
-          Can You Beat the Map?
+        Can You Beat the Map?
         </div>
         <h1 style={{ fontSize: 48, fontWeight: 700, margin: 0, letterSpacing: -1 }}>CTWB</h1>
+        <div style={{ display: "flex", justifyContent: "center", gap: 0, marginTop: 10 }}>
+        {[
+            { letter: "C", word: "Car" },
+            { letter: "T", word: "Transit" },
+            { letter: "W", word: "Walk" },
+            { letter: "B", word: "Bike" },
+        ].map(({ letter, word }) => (
+            <div key={letter} style={{ textAlign: "center", width: 72 }}>
+            <div style={{ fontSize: 18, fontWeight: 700, fontFamily: "sans-serif" }}>{letter}</div>
+            <div style={{ fontSize: 11, color: "#999", fontFamily: "sans-serif", letterSpacing: 1 }}>{word.toUpperCase()}</div>
+            </div>
+        ))}
+        </div>
       </div>
 
       <img
