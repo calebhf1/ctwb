@@ -76,6 +76,18 @@ const CITIES = {
     { origin: "Marlins Park, Miami", destination: "Vizcaya Museum, Miami" },
     { origin: "Miami Airport, Miami", destination: "Art Deco Historic District, Miami Beach" },
   ],
+  "St Croix, USVI": [
+    { origin: "Leatherback Brewing Co, St Croix", destination: "Frederiksted Pier, St Croix" },
+    { origin: "Leatherback Brewing Co, St Croix", destination: "Christiansted Boardwalk, St Croix" },
+    { origin: "Leatherback Brewing Co, St Croix", destination: "Cane Bay, St Croix" },
+    { origin: "Leatherback Brewing Co, St Croix", destination: "Point Udall, St Croix" },
+    { origin: "Frederiksted Pier, St Croix", destination: "Christiansted Boardwalk, St Croix" },
+    { origin: "Frederiksted Pier, St Croix", destination: "Cane Bay, St Croix" },
+    { origin: "Frederiksted Pier, St Croix", destination: "Point Udall, St Croix" },
+    { origin: "Christiansted Boardwalk, St Croix", destination: "Cane Bay, St Croix" },
+    { origin: "Christiansted Boardwalk, St Croix", destination: "Point Udall, St Croix" },
+    { origin: "Ziggy's, St Croix USVI", destination: "Cheeseburgers in Paradise, St Croix USVI" },
+  ],
 
   "Geneva": [
     { origin: "Geneva Airport, Geneva", destination: "Old Town Geneva, Geneva" },
