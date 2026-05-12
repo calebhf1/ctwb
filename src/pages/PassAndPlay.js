@@ -47,30 +47,44 @@ function scoreColor(score) {
   return "#b03030";
 }
 
-function ScoreScale({ score }) {
+function MultiScoreScale({ players }) {
   const max = 120;
-  const capped = Math.min(score, max);
-  const pct = (capped / max) * 100;
+  const colors = ["#3b82f6", "#f59e0b", "#10b981", "#ef4444"];
   return (
     <div style={{ margin: "8px 0 4px" }}>
       <div style={{ position: "relative", height: 10, borderRadius: 5, background: "linear-gradient(to right, #1a7a4a, #f0c040, #b03030)" }}>
-        <div style={{
-          position: "absolute",
-          top: "50%",
-          left: `${pct}%`,
-          transform: "translate(-50%, -50%)",
-          width: 14,
-          height: 14,
-          borderRadius: "50%",
-          background: "#3b82f6",
-          border: "2px solid white",
-          boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
-        }} />
+        {players.map((p, i) => {
+          const capped = Math.min(p.score, max);
+          const pct = (capped / max) * 100;
+          return (
+            <div key={p.name} style={{
+              position: "absolute",
+              top: "50%",
+              left: `${pct}%`,
+              transform: "translate(-50%, -50%)",
+              width: 14,
+              height: 14,
+              borderRadius: "50%",
+              background: colors[i % colors.length],
+              border: "2px solid white",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
+              zIndex: i + 1,
+            }} />
+          );
+        })}
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#999", marginTop: 4 }}>
         <span>🎯 perfect</span>
         <span>ok</span>
         <span>way off</span>
+      </div>
+      <div style={{ display: "flex", gap: 12, marginTop: 6, flexWrap: "wrap" }}>
+        {players.map((p, i) => (
+          <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11 }}>
+            <div style={{ width: 10, height: 10, borderRadius: "50%", background: colors[i % colors.length], border: "1.5px solid white", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
+            <span style={{ color: "#666" }}>{p.name}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -319,50 +333,60 @@ export default function PassAndPlay() {
   }
 
   if (phase === PHASES.ROUND_REVEAL) {
-    const roundActuals = roundResults[0]?.actuals;
-    return (
-      <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
-        <h1 style={{ fontSize: 28, marginBottom: 4 }}>Round {currentRound + 1} results</h1>
-        <p style={{ color: "#666", marginBottom: 20 }}>{route.origin} → {route.destination}</p>
+  const roundActuals = roundResults[0]?.actuals;
+  const colors = ["#3b82f6", "#f59e0b", "#10b981", "#ef4444"];
 
-        <p style={{ fontWeight: 500, marginBottom: 12 }}>Actual times:</p>
-        {MODES.map(m => (
-          <div key={m.key} style={{ display: "flex", justifyContent: "space-between", fontSize: 14, padding: "6px 0", borderBottom: "1px solid #f0f0f0" }}>
-            <span>{m.emoji} {m.label}</span>
-            <strong>{roundActuals?.[m.key] === null ? "No route" : `${roundActuals?.[m.key]} min`}</strong>
-          </div>
-        ))}
+  return (
+    <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
+      <h1 style={{ fontSize: 28, marginBottom: 4 }}>Round {currentRound + 1} results</h1>
+      <p style={{ color: "#666", marginBottom: 20 }}>{route.origin} → {route.destination}</p>
 
-        <p style={{ fontWeight: 500, margin: "20px 0 12px" }}>Scores this round:</p>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
         {roundResults.map((r, i) => (
-          <div key={r.player} style={{
-            background: i === 0 ? "#f5f5f5" : "#f5f5f5",
-            borderRadius: 8, padding: "12px 16px", marginBottom: 10,
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
-              <span style={{ fontWeight: 600 }}>{r.player}</span>
-              <span style={{ fontWeight: 600, color: scoreColor(r.score) }}>{r.score} pts</span>
-            </div>
-            {MODES.map(m => {
-              const actual = r.actuals[m.key];
-              const guess = toMinutes(r.guesses[m.key].h, r.guesses[m.key].m);
-              const score = actual === null ? null : calcScore(guess, actual);
-              return (
-                <div key={m.key} style={{ fontSize: 13, color: "#666", marginBottom: 4 }}>
-                  {m.emoji} {m.label}: {guess} min guess · {actual === null ? "No route" : `${actual} min actual`}
-                  {score !== null && <ScoreScale score={score} />}
-                </div>
-              );
-            })}
+          <div key={r.player} style={{ display: "flex", alignItems: "center", gap: 6, background: "#f5f5f5", borderRadius: 20, padding: "4px 12px" }}>
+            <div style={{ width: 10, height: 10, borderRadius: "50%", background: colors[i % colors.length] }} />
+            <span style={{ fontSize: 13, fontWeight: 500 }}>{r.player}</span>
+            <span style={{ fontSize: 13, color: scoreColor(r.score) }}>{r.score} pts</span>
           </div>
         ))}
-
-        <button onClick={handleNextRound} style={btnStyle}>
-          {currentRound === routes.length - 1 ? "See final scores →" : "Next round →"}
-        </button>
       </div>
-    );
-  }
+
+      {MODES.map(m => {
+        const actual = roundActuals?.[m.key];
+        const playerScores = roundResults.map((r, i) => {
+          const guess = toMinutes(r.guesses[m.key].h, r.guesses[m.key].m);
+          const score = actual === null ? null : calcScore(guess, actual);
+          return { name: r.player, guess, score: score ?? 0, color: colors[i % colors.length] };
+        });
+
+        return (
+          <div key={m.key} style={{ background: "#f5f5f5", borderRadius: 8, padding: "12px 16px", marginBottom: 12 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+              <span style={{ fontWeight: 500 }}>{m.emoji} {m.label}</span>
+              <span style={{ fontSize: 13, color: "#999" }}>
+                actual: <strong style={{ color: "#111" }}>{actual === null ? "No route" : `${actual} min`}</strong>
+              </span>
+            </div>
+            <div style={{ display: "flex", gap: 12, marginBottom: 8, flexWrap: "wrap" }}>
+              {playerScores.map(p => (
+                <span key={p.name} style={{ fontSize: 13, color: "#666" }}>
+                  <span style={{ color: p.color, fontWeight: 600 }}>{p.name}</span>: {p.guess} min
+                </span>
+              ))}
+            </div>
+            {actual !== null && (
+              <MultiScoreScale players={playerScores} />
+            )}
+          </div>
+        );
+      })}
+
+      <button onClick={handleNextRound} style={btnStyle}>
+        {currentRound === routes.length - 1 ? "See final scores →" : "Next round →"}
+      </button>
+    </div>
+  );
+}
 
   if (phase === PHASES.FINAL) {
     const sorted = Object.entries(allScores).sort((a, b) => a[1] - b[1]);
