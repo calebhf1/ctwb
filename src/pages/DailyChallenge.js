@@ -13,6 +13,8 @@ const DAILY_ROUTES = [
   { date: "2026-05-12", city: "New York", origin: "Times Square, New York", destination: "Brooklyn Bridge, New York" },
 ];
 
+const medals = ["🥇", "🥈", "🥉"];
+
 async function fetchTravelTime(origin, destination, mode) {
   const params = new URLSearchParams({ origins: origin, destinations: destination, mode });
   const response = await fetch(`/api/maps?${params}`);
@@ -179,11 +181,12 @@ export default function DailyChallenge() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [leaderboard, setLeaderboard] = useState([]);
-  const [loadingBoard, setLoadingBoard] = useState(false);
+  const [loadingBoard, setLoadingBoard] = useState(true);
+  const [viewingBoard, setViewingBoard] = useState(false);
 
   useEffect(() => {
-    if (actuals) loadLeaderboard();
-  }, [actuals]);
+    loadLeaderboard();
+  }, []);
 
   async function loadLeaderboard() {
     setLoadingBoard(true);
@@ -241,6 +244,7 @@ export default function DailyChallenge() {
       localStorage.setItem(storageKey, JSON.stringify({
         guesses, actuals: results, totalScore: score,
       }));
+      await loadLeaderboard();
     } catch (e) {
       console.error(e);
       setError("Something went wrong. Please try again.");
@@ -248,7 +252,36 @@ export default function DailyChallenge() {
     setSubmitting(false);
   }
 
-  const medals = ["🥇", "🥈", "🥉"];
+  if (viewingBoard) {
+    return (
+      <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
+          <button onClick={() => setViewingBoard(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, padding: 0 }}>←</button>
+          <h1 style={{ fontSize: 28, margin: 0 }}>Daily Leaderboard</h1>
+        </div>
+        <p style={{ color: "#666", marginBottom: 24 }}>{today} · {route.city}</p>
+        {loadingBoard && <p style={{ color: "#999" }}>Loading…</p>}
+        {!loadingBoard && leaderboard.length === 0 && (
+          <p style={{ color: "#999" }}>No scores yet today — be the first!</p>
+        )}
+        {!loadingBoard && leaderboard.map((s, i) => (
+          <div key={s.username + i} style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            background: "#f5f5f5", borderRadius: 8, padding: "12px 16px", marginBottom: 8,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 18 }}>{medals[i] || `${i + 1}.`}</span>
+              <span style={{ fontWeight: 600 }}>{s.username}</span>
+            </div>
+            <span style={{ fontWeight: 600, fontSize: 18 }}>{s.total_score}</span>
+          </div>
+        ))}
+        <button onClick={() => setViewingBoard(false)} style={{ ...btnStyle, background: "#fff", color: "#111", border: "1px solid #ddd", marginTop: 16 }}>
+          ← Back
+        </button>
+      </div>
+    );
+  }
 
   if (!username) {
     return (
@@ -275,6 +308,9 @@ export default function DailyChallenge() {
         />
         {error && <p style={{ color: "red", fontSize: 13 }}>{error}</p>}
         <button onClick={handleSetUsername} style={btnStyle}>Let's play →</button>
+        <button onClick={() => setViewingBoard(true)} style={{ ...btnStyle, background: "#fff", color: "#111", border: "1px solid #ddd", marginTop: 8 }}>
+          📊 View today's leaderboard
+        </button>
       </div>
     );
   }
@@ -323,6 +359,9 @@ export default function DailyChallenge() {
           <button onClick={handleSubmit} disabled={submitting} style={btnStyle}>
             {submitting ? "Looking up times…" : "Submit guesses"}
           </button>
+          <button onClick={() => setViewingBoard(true)} style={{ ...btnStyle, background: "#fff", color: "#111", border: "1px solid #ddd", marginTop: 8 }}>
+            📊 Today's leaderboard
+          </button>
         </>
       ) : (
         <>
@@ -363,8 +402,16 @@ export default function DailyChallenge() {
           />
 
           <div style={{ marginBottom: 24 }}>
-            <p style={{ fontWeight: 600, marginBottom: 12, fontSize: 16 }}>Today's leaderboard</p>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <p style={{ fontWeight: 600, fontSize: 16, margin: 0 }}>Today's leaderboard</p>
+              <button onClick={loadLeaderboard} style={{ fontSize: 12, color: "#666", background: "none", border: "none", cursor: "pointer" }}>
+                Refresh
+              </button>
+            </div>
             {loadingBoard && <p style={{ color: "#999", fontSize: 14 }}>Loading…</p>}
+            {!loadingBoard && leaderboard.length === 0 && (
+              <p style={{ color: "#999" }}>No scores yet — you're the first!</p>
+            )}
             {!loadingBoard && leaderboard.map((s, i) => (
               <div key={s.username + i} style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
