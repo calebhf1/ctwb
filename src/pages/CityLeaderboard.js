@@ -33,12 +33,6 @@ const MODES = [
   { key: "transit", label: "Transit", emoji: "🚌" },
 ];
 
-function scoreColor(score) {
-  if (score <= 10) return "#1a7a4a";
-  if (score <= 40) return "#b07d00";
-  return "#b03030";
-}
-
 function CityLeaderboard() {
   const { city: cityParam } = useParams();
   const navigate = useNavigate();
