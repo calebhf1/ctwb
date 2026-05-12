@@ -184,9 +184,9 @@ export default function DailyChallenge() {
   const [loadingBoard, setLoadingBoard] = useState(true);
   const [viewingBoard, setViewingBoard] = useState(false);
 
-  useEffect(() => {
-    loadLeaderboard();
-  }, []);
+    useEffect(() => {
+  loadLeaderboard();
+}, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadLeaderboard() {
     setLoadingBoard(true);
