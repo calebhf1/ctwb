@@ -14,6 +14,8 @@ const COUNTRIES = {
   "🇨🇭 Switzerland": ["Geneva", "Lausanne", "Bern", "Zurich", "Basel"],
 };
 
+const PLAYER_COLORS = ["#3b82f6", "#f59e0b", "#10b981", "#ef4444"];
+
 async function fetchTravelTime(origin, destination, mode) {
   const params = new URLSearchParams({ origins: origin, destinations: destination, mode });
   const response = await fetch(`/api/maps?${params}`);
@@ -47,12 +49,22 @@ function scoreColor(score) {
   return "#b03030";
 }
 
-function MultiScoreScale({ players }) {
+function MultiScoreScale({ players, actual }) {
   const max = 120;
-  const colors = ["#3b82f6", "#f59e0b", "#10b981", "#ef4444"];
+  const actualPct = Math.min((actual / max) * 100, 100);
   return (
     <div style={{ margin: "8px 0 4px" }}>
       <div style={{ position: "relative", height: 10, borderRadius: 5, background: "linear-gradient(to right, #1a7a4a, #f0c040, #b03030)" }}>
+        <div style={{
+          position: "absolute",
+          top: 0,
+          left: `${actualPct}%`,
+          width: 2,
+          height: "100%",
+          background: "white",
+          opacity: 0.8,
+          transform: "translateX(-50%)",
+        }} />
         {players.map((p, i) => {
           const capped = Math.min(p.score, max);
           const pct = (capped / max) * 100;
@@ -65,7 +77,7 @@ function MultiScoreScale({ players }) {
               width: 14,
               height: 14,
               borderRadius: "50%",
-              background: colors[i % colors.length],
+              background: p.color,
               border: "2px solid white",
               boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
               zIndex: i + 1,
@@ -77,14 +89,6 @@ function MultiScoreScale({ players }) {
         <span>🎯 perfect</span>
         <span>ok</span>
         <span>way off</span>
-      </div>
-      <div style={{ display: "flex", gap: 12, marginTop: 6, flexWrap: "wrap" }}>
-        {players.map((p, i) => (
-          <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11 }}>
-            <div style={{ width: 10, height: 10, borderRadius: "50%", background: colors[i % colors.length], border: "1.5px solid white", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
-            <span style={{ color: "#666" }}>{p.name}</span>
-          </div>
-        ))}
       </div>
     </div>
   );
@@ -138,16 +142,13 @@ export default function PassAndPlay() {
     if (!city) return setError("Please select a city.");
     if (playerNames.some(n => !n.trim())) return setError("Please enter all player names.");
     setError("");
-
     const allRoutes = CITIES[city];
     const shuffled = [...allRoutes].sort(() => Math.random() - 0.5);
     const selected = shuffled.slice(0, 3);
     setRoutes(selected);
-
     const initialScores = {};
     playerNames.forEach(n => { initialScores[n.trim()] = 0; });
     setAllScores(initialScores);
-
     setPhase(PHASES.GUESSING);
   }
 
@@ -175,7 +176,6 @@ export default function PassAndPlay() {
       setAllScores(prev => ({ ...prev, [playerName]: (prev[playerName] || 0) + roundScore }));
 
       const isLastPlayer = currentPlayerIndex === playerNames.length - 1;
-
       if (isLastPlayer) {
         setPhase(PHASES.ROUND_REVEAL);
       } else {
@@ -190,9 +190,7 @@ export default function PassAndPlay() {
     setSubmitting(false);
   }
 
-  function handleNextPlayer() {
-    setPhase(PHASES.GUESSING);
-  }
+  function handleNextPlayer() { setPhase(PHASES.GUESSING); }
 
   function handleNextRound() {
     const isLastRound = currentRound === routes.length - 1;
@@ -222,28 +220,16 @@ export default function PassAndPlay() {
 
         <p style={{ fontWeight: 500, marginBottom: 8 }}>Player names</p>
         {playerNames.map((name, i) => (
-          <input
-            key={i}
-            placeholder={`Player ${i + 1} name`}
-            value={name}
-            onChange={e => {
-              const updated = [...playerNames];
-              updated[i] = e.target.value;
-              setPlayerNames(updated);
-            }}
-            style={inputStyle}
-          />
+          <input key={i} placeholder={`Player ${i + 1} name`} value={name}
+            onChange={e => { const updated = [...playerNames]; updated[i] = e.target.value; setPlayerNames(updated); }}
+            style={inputStyle} />
         ))}
         <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
           {playerNames.length < 4 && (
-            <button onClick={() => setPlayerNames([...playerNames, ""])} style={{ ...outlineBtn, flex: 1 }}>
-              + Add player
-            </button>
+            <button onClick={() => setPlayerNames([...playerNames, ""])} style={{ ...outlineBtn, flex: 1 }}>+ Add player</button>
           )}
           {playerNames.length > 2 && (
-            <button onClick={() => setPlayerNames(playerNames.slice(0, -1))} style={{ ...outlineBtn, flex: 1 }}>
-              − Remove player
-            </button>
+            <button onClick={() => setPlayerNames(playerNames.slice(0, -1))} style={{ ...outlineBtn, flex: 1 }}>− Remove player</button>
           )}
         </div>
 
@@ -285,12 +271,8 @@ export default function PassAndPlay() {
           <div style={{ fontSize: 40, marginBottom: 16 }}>📱</div>
           <h2 style={{ fontSize: 22, marginBottom: 8, color: "#fff" }}>Pass the device</h2>
           <p style={{ color: "#aaa", marginBottom: 24 }}>Hand it to <strong style={{ color: "#fff" }}>{nextPlayer}</strong></p>
-          <p style={{ color: "#666", fontSize: 13, marginBottom: 24 }}>
-            Round {currentRound + 1} of {routes.length} · {city}
-          </p>
-          <button onClick={handleNextPlayer} style={{ ...btnStyle, background: "#fff", color: "#111" }}>
-            I'm ready →
-          </button>
+          <p style={{ color: "#666", fontSize: 13, marginBottom: 24 }}>Round {currentRound + 1} of {routes.length} · {city}</p>
+          <button onClick={handleNextPlayer} style={{ ...btnStyle, background: "#fff", color: "#111" }}>I'm ready →</button>
         </div>
       </div>
     );
@@ -298,11 +280,12 @@ export default function PassAndPlay() {
 
   if (phase === PHASES.GUESSING) {
     const currentPlayer = playerNames[currentPlayerIndex].trim();
+    const playerColor = PLAYER_COLORS[currentPlayerIndex % PLAYER_COLORS.length];
     return (
       <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
           <h1 style={{ fontSize: 28, margin: 0 }}>CTWB</h1>
-          <span style={{ fontSize: 13, color: "#999" }}>{currentPlayer}'s turn</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: playerColor }}>{currentPlayer}'s turn</span>
         </div>
         <p style={{ color: "#666", marginBottom: 16 }}>{city} · Round {currentRound + 1} of {routes.length}</p>
 
@@ -333,60 +316,70 @@ export default function PassAndPlay() {
   }
 
   if (phase === PHASES.ROUND_REVEAL) {
-  const roundActuals = roundResults[0]?.actuals;
-  const colors = ["#3b82f6", "#f59e0b", "#10b981", "#ef4444"];
+    const roundActuals = roundResults[0]?.actuals;
+    const roundWinner = [...roundResults].sort((a, b) => a.score - b.score)[0];
 
-  return (
-    <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
-      <h1 style={{ fontSize: 28, marginBottom: 4 }}>Round {currentRound + 1} results</h1>
-      <p style={{ color: "#666", marginBottom: 20 }}>{route.origin} → {route.destination}</p>
+    return (
+      <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
+        <h1 style={{ fontSize: 28, marginBottom: 4 }}>Round {currentRound + 1} results</h1>
+        <p style={{ color: "#666", marginBottom: 16 }}>{route.origin} → {route.destination}</p>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
-        {roundResults.map((r, i) => (
-          <div key={r.player} style={{ display: "flex", alignItems: "center", gap: 6, background: "#f5f5f5", borderRadius: 20, padding: "4px 12px" }}>
-            <div style={{ width: 10, height: 10, borderRadius: "50%", background: colors[i % colors.length] }} />
-            <span style={{ fontSize: 13, fontWeight: 500 }}>{r.player}</span>
-            <span style={{ fontSize: 13, color: scoreColor(r.score) }}>{r.score} pts</span>
-          </div>
-        ))}
-      </div>
+        <div style={{ background: "#f5f5f5", borderRadius: 8, padding: "10px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 18 }}>🏆</span>
+          <span style={{ fontSize: 14, fontWeight: 600 }}>
+            {roundWinner.player} wins this round
+          </span>
+          <span style={{ fontSize: 13, color: scoreColor(roundWinner.score), marginLeft: "auto" }}>
+            {roundWinner.score} pts
+          </span>
+        </div>
 
-      {MODES.map(m => {
-        const actual = roundActuals?.[m.key];
-        const playerScores = roundResults.map((r, i) => {
-          const guess = toMinutes(r.guesses[m.key].h, r.guesses[m.key].m);
-          const score = actual === null ? null : calcScore(guess, actual);
-          return { name: r.player, guess, score: score ?? 0, color: colors[i % colors.length] };
-        });
-
-        return (
-          <div key={m.key} style={{ background: "#f5f5f5", borderRadius: 8, padding: "12px 16px", marginBottom: 12 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-              <span style={{ fontWeight: 500 }}>{m.emoji} {m.label}</span>
-              <span style={{ fontSize: 13, color: "#999" }}>
-                actual: <strong style={{ color: "#111" }}>{actual === null ? "No route" : `${actual} min`}</strong>
-              </span>
+        <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
+          {roundResults.map((r, i) => (
+            <div key={r.player} style={{ display: "flex", alignItems: "center", gap: 6, background: "#f5f5f5", borderRadius: 20, padding: "4px 12px" }}>
+              <div style={{ width: 10, height: 10, borderRadius: "50%", background: PLAYER_COLORS[i % PLAYER_COLORS.length] }} />
+              <span style={{ fontSize: 13, fontWeight: 500 }}>{r.player}</span>
+              <span style={{ fontSize: 13, color: scoreColor(r.score) }}>{r.score} pts</span>
             </div>
-            <div style={{ display: "flex", gap: 12, marginBottom: 8, flexWrap: "wrap" }}>
-              {playerScores.map(p => (
-                <span key={p.name} style={{ fontSize: 13, color: "#666" }}>
-                  <span style={{ color: p.color, fontWeight: 600 }}>{p.name}</span>: {p.guess} min
+          ))}
+        </div>
+
+        {MODES.map(m => {
+          const actual = roundActuals?.[m.key];
+          const playerScores = roundResults.map((r, i) => {
+            const guess = toMinutes(r.guesses[m.key].h, r.guesses[m.key].m);
+            const score = actual === null ? null : calcScore(guess, actual);
+            return { name: r.player, guess, score: score ?? 0, color: PLAYER_COLORS[i % PLAYER_COLORS.length] };
+          });
+
+          return (
+            <div key={m.key} style={{ background: "#f5f5f5", borderRadius: 8, padding: "12px 16px", marginBottom: 12 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                <span style={{ fontWeight: 500 }}>{m.emoji} {m.label}</span>
+                <span style={{ fontSize: 13, color: "#999" }}>
+                  actual: <strong style={{ color: "#111" }}>{actual === null ? "No route" : `${actual} min`}</strong>
                 </span>
-              ))}
+              </div>
+              <div style={{ display: "flex", gap: 12, marginBottom: 8, flexWrap: "wrap" }}>
+                {playerScores.map(p => (
+                  <span key={p.name} style={{ fontSize: 13 }}>
+                    <span style={{ color: p.color, fontWeight: 600 }}>{p.name}</span>
+                    <span style={{ color: "#666" }}>: {p.guess} min </span>
+                    <span style={{ color: scoreColor(p.score), fontSize: 12 }}>(+{p.score})</span>
+                  </span>
+                ))}
+              </div>
+              {actual !== null && <MultiScoreScale players={playerScores} actual={actual} />}
             </div>
-            {actual !== null && (
-              <MultiScoreScale players={playerScores} />
-            )}
-          </div>
-        );
-      })}
+          );
+        })}
 
-      <button onClick={handleNextRound} style={btnStyle}>
-        {currentRound === routes.length - 1 ? "See final scores →" : "Next round →"}
-      </button>
-    </div>
-  );
-}
+        <button onClick={handleNextRound} style={btnStyle}>
+          {currentRound === routes.length - 1 ? "See final scores →" : "Next round →"}
+        </button>
+      </div>
+    );
+  }
 
   if (phase === PHASES.FINAL) {
     const sorted = Object.entries(allScores).sort((a, b) => a[1] - b[1]);
@@ -415,9 +408,7 @@ export default function PassAndPlay() {
         ))}
 
         <button onClick={() => navigate('/')} style={{ ...btnStyle, marginTop: 8 }}>Back to home</button>
-        <button onClick={() => window.location.reload()} style={{ ...outlineBtn, width: "100%", marginTop: 8 }}>
-          Play again
-        </button>
+        <button onClick={() => window.location.reload()} style={{ ...outlineBtn, width: "100%", marginTop: 8 }}>Play again</button>
       </div>
     );
   }
