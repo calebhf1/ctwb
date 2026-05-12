@@ -19,7 +19,7 @@ function Home() {
         borderBottom: "1px solid #e0e0e0",
         marginBottom: 24,
       }}>
-        <div style={{ fontSize: 13, letterSpacing: 4, color: "#999", textTransform: "uppercase", marginBottom: 8 }}>
+        <div style={{ fontSize: 13, letterSpacing: 2, color: "#999", marginBottom: 8, fontFamily: "sans-serif" }}>
         Think you know your city?
         </div>
         <h1 style={{ fontSize: 48, fontWeight: 700, margin: 0, letterSpacing: -1 }}>CTWB</h1>
@@ -60,7 +60,7 @@ function Home() {
         color: "#999",
         marginBottom: 28,
       }}>
-        Lowest score wins. Can you beat your friends?
+        Lower is better — 0 is perfect. Can you beat your friends?
       </p>
 
       <div style={{
@@ -122,18 +122,8 @@ function Home() {
         border: "1px solid #ddd",
         marginBottom: 32,
       }}>
-        🗺️ Free mode
+        🗺️ Practice mode
       </button>
-
-      <div style={{
-        textAlign: "center",
-        fontSize: 12,
-        color: "#bbb",
-        fontFamily: "sans-serif",
-        paddingBottom: 40,
-      }}>
-        playctwb.vercel.app
-      </div>
     </div>
   );
 }
