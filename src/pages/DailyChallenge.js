@@ -15,6 +15,36 @@ const DAILY_ROUTES = [
 
 const medals = ["🥇", "🥈", "🥉"];
 
+const CITY_TIMEZONES = {
+  "New York": "America/New_York",
+  "Chicago": "America/Chicago",
+  "Los Angeles": "America/Los_Angeles",
+  "San Francisco": "America/Los_Angeles",
+  "San Diego": "America/Los_Angeles",
+  "Houston": "America/Chicago",
+  "Philadelphia": "America/New_York",
+  "Washington DC": "America/New_York",
+  "Boston": "America/New_York",
+  "Miami": "America/New_York",
+  "St Croix, USVI": "America/St_Thomas",
+  "Geneva": "Europe/Zurich",
+  "Lausanne": "Europe/Zurich",
+  "Bern": "Europe/Zurich",
+  "Zurich": "Europe/Zurich",
+  "Basel": "Europe/Zurich",
+};
+
+function getCityTime(city) {
+  const tz = CITY_TIMEZONES[city] || "America/New_York";
+  return new Date().toLocaleTimeString("en-US", {
+    timeZone: tz,
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+    weekday: "short",
+  });
+}
+
 async function fetchTravelTime(origin, destination, mode) {
   const params = new URLSearchParams({ origins: origin, destinations: destination, mode });
   const response = await fetch(`/api/maps?${params}`);
@@ -184,9 +214,9 @@ export default function DailyChallenge() {
   const [loadingBoard, setLoadingBoard] = useState(true);
   const [viewingBoard, setViewingBoard] = useState(false);
 
-    useEffect(() => {
-  loadLeaderboard();
-}, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    loadLeaderboard();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadLeaderboard() {
     setLoadingBoard(true);
@@ -341,6 +371,15 @@ export default function DailyChallenge() {
 
       {!actuals ? (
         <>
+          <div style={{
+            background: "#f5f5f5", borderRadius: 8, padding: "10px 16px",
+            marginBottom: 16, display: "flex", alignItems: "center", gap: 8,
+            fontSize: 13, color: "#666",
+          }}>
+            <span>🕐</span>
+            <span>Local time in {route.city}: <strong style={{ color: "#111" }}>{getCityTime(route.city)}</strong></span>
+          </div>
+
           <p style={{ fontWeight: 500, marginBottom: 12 }}>Your guesses:</p>
           {MODES.map(m => (
             <div key={m.key} style={{ display: "flex", alignItems: "center", marginBottom: 12, gap: 8 }}>
