@@ -88,6 +88,7 @@ const CITIES = {
     { origin: "Parc La Grange, Geneva", destination: "Geneva Train Station, Geneva" },
     { origin: "Plainpalais, Geneva", destination: "Old Town Geneva, Geneva" },
     { origin: "Geneva Airport, Geneva", destination: "Palais des Nations, Geneva" },
+    { origin: "Geneva Graduate Institute, Geneva", destination: "Plaine de Plainpalais, Geneva" },
   ],
   "Lausanne": [
     { origin: "Lausanne Train Station, Lausanne", destination: "Olympic Museum, Lausanne" },
