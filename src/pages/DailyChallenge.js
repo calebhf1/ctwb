@@ -403,6 +403,23 @@ export default function DailyChallenge() {
       <p style={{ fontWeight: 500, marginBottom: 4 }}>Today's route</p>
       <p style={{ fontSize: 13, color: "#666", marginBottom: 8 }}>{route.city}</p>
       <p style={{ fontSize: 16, fontWeight: 500, marginBottom: 12 }}>{route.origin} → {route.destination}</p>
+      {route.departureTime && (
+        <div style={{
+            background: "#fff8e6",
+            border: "1px solid #f0d060",
+            borderRadius: 8,
+            padding: "10px 16px",
+            marginBottom: 12,
+            fontSize: 13,
+            color: "#7a5a00",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+        }}>
+            <span>⏰</span>
+            <span>Today's times are fixed at <strong>8:30am local time</strong> — think rush hour!</span>
+        </div>
+        )}
       <RouteMap origin={route.origin} destination={route.destination} />
 
       {!actuals ? (
