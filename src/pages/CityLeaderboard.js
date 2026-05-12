@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import supabase from "../supabase";
 
 const COUNTRIES = {
-  "🇺🇸 United States": ["Chicago", "New York", "Los Angeles", "San Francisco", "San Diego", "Houston", "Philadelphia", "Washington DC", "Boston", "Miami", "St Croix"],
+  "🇺🇸 United States": ["Chicago", "New York", "Los Angeles", "San Francisco", "San Diego", "Houston", "Philadelphia", "Washington DC", "Boston", "Miami", "St Croix, USVI"],
   "🇨🇭 Switzerland": ["Geneva", "Lausanne", "Bern", "Zurich", "Basel"],
 };
 
@@ -18,7 +18,7 @@ const CITY_TIMEZONES = {
   "Washington DC": "America/New_York",
   "Boston": "America/New_York",
   "Miami": "America/New_York",
-  "St Croix": "America/St_Thomas",
+  "St Croix, USVI": "America/St_Thomas",
   "Geneva": "Europe/Zurich",
   "Lausanne": "Europe/Zurich",
   "Bern": "Europe/Zurich",

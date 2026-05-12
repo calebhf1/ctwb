@@ -50,22 +50,14 @@ function ScoreScale({ score }) {
     <div style={{ margin: "8px 0 4px" }}>
       <div style={{ position: "relative", height: 10, borderRadius: 5, background: "linear-gradient(to right, #1a7a4a, #f0c040, #b03030)" }}>
         <div style={{
-          position: "absolute",
-          top: "50%",
-          left: `${pct}%`,
-          transform: "translate(-50%, -50%)",
-          width: 14,
-          height: 14,
-          borderRadius: "50%",
-          background: "#3b82f6",
-          border: "2px solid white",
+          position: "absolute", top: "50%", left: `${pct}%`,
+          transform: "translate(-50%, -50%)", width: 14, height: 14,
+          borderRadius: "50%", background: "#3b82f6", border: "2px solid white",
           boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
         }} />
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#999", marginTop: 4 }}>
-        <span>🎯 perfect</span>
-        <span>ok</span>
-        <span>way off</span>
+        <span>🎯 perfect</span><span>ok</span><span>way off</span>
       </div>
     </div>
   );
@@ -75,12 +67,62 @@ function RouteMap({ origin, destination }) {
   const key = process.env.REACT_APP_GOOGLE_MAPS_KEY;
   const markers = `markers=color:red%7Clabel:A%7C${encodeURIComponent(origin)}&markers=color:blue%7Clabel:B%7C${encodeURIComponent(destination)}`;
   const url = `https://maps.googleapis.com/maps/api/staticmap?size=480x200&maptype=roadmap&${markers}&key=${key}`;
+  return <img src={url} alt="Route map" style={{ width: "100%", borderRadius: 8, marginBottom: 16 }} />;
+}
+
+function ResultsCard({ city, routes, roundScores, allActuals, allGuesses }) {
+  const [copied, setCopied] = useState(false);
+  const totalScore = roundScores.reduce((a, b) => a + b, 0);
+
+  function getModeEmoji(score) {
+    if (score === null) return "⬜";
+    if (score <= 15) return "🟩";
+    if (score <= 50) return "🟨";
+    return "🟥";
+  }
+
+  const lines = [
+    `CTWB — ${city}`,
+    `${routes.length} round${routes.length === 1 ? "" : "s"} · ${totalScore} pts`,
+    "",
+    ...roundScores.map((roundScore, i) => {
+      const modeEmojis = MODES.map(m => {
+        const actual = allActuals[i]?.[m.key];
+        const guess = allGuesses[i] ? toMinutes(allGuesses[i][m.key].h, allGuesses[i][m.key].m) : 0;
+        const score = actual === null ? null : calcScore(guess, actual);
+        return getModeEmoji(score);
+      });
+      return `Round ${i + 1}: ${modeEmojis.join("")} · ${roundScore} pts`;
+    }),
+    "",
+    "playctwb.vercel.app",
+  ];
+
+  const text = lines.join("\n");
+
   return (
-    <img
-      src={url}
-      alt="Route map"
-      style={{ width: "100%", borderRadius: 8, marginBottom: 16 }}
-    />
+    <div style={{ background: "#f5f5f5", borderRadius: 12, padding: "20px", marginBottom: 16 }}>
+      <p style={{ fontWeight: 600, marginBottom: 12, fontSize: 15 }}>Share your results</p>
+      <div style={{
+        background: "#fff", borderRadius: 8, padding: "16px",
+        fontFamily: "monospace", fontSize: 14, lineHeight: 1.9,
+        marginBottom: 12, whiteSpace: "pre", color: "#111",
+        overflowX: "auto",
+      }}>
+        {text}
+      </div>
+      <button onClick={() => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }} style={{
+        width: "100%", padding: "10px", fontSize: 14, fontWeight: 600,
+        background: copied ? "#1a7a4a" : "#111", color: "#fff",
+        border: "none", borderRadius: 6, cursor: "pointer", transition: "background 0.2s",
+      }}>
+        {copied ? "✓ Copied to clipboard!" : "Copy results"}
+      </button>
+    </div>
   );
 }
 
@@ -96,12 +138,14 @@ function Game() {
   const [currentRound, setCurrentRound] = useState(0);
   const [guesses, setGuesses] = useState({
     driving:   { h: "", m: "" },
+    transit:   { h: "", m: "" },
     walking:   { h: "", m: "" },
     bicycling: { h: "", m: "" },
-    transit:   { h: "", m: "" },
   });
   const [actuals, setActuals] = useState(null);
   const [roundScores, setRoundScores] = useState([]);
+  const [allActuals, setAllActuals] = useState([]);
+  const [allGuesses, setAllGuesses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -110,17 +154,9 @@ function Game() {
   useEffect(() => {
     async function loadGame() {
       const { data: gameData } = await supabase
-        .from("games")
-        .select("*")
-        .eq("id", gameId)
-        .single();
-
+        .from("games").select("*").eq("id", gameId).single();
       const { data: routeData } = await supabase
-        .from("routes")
-        .select("*")
-        .eq("game_id", gameId)
-        .order("round_number");
-
+        .from("routes").select("*").eq("game_id", gameId).order("round_number");
       setGame(gameData);
       setRoutes(routeData || []);
       setLoading(false);
@@ -131,13 +167,10 @@ function Game() {
   async function handleJoin() {
     if (!usernameInput.trim()) return setError("Please enter a username.");
     setError("");
-
     const { data: player } = await supabase
       .from("players")
       .insert({ game_id: gameId, username: usernameInput.trim() })
-      .select()
-      .single();
-
+      .select().single();
     localStorage.setItem("ctwb_player_id", player.id);
     localStorage.setItem("ctwb_username", usernameInput.trim());
     setPlayerId(player.id);
@@ -176,7 +209,9 @@ function Game() {
       });
 
       setActuals(results);
-      setRoundScores([...roundScores, roundScore]);
+      setRoundScores(prev => [...prev, roundScore]);
+      setAllActuals(prev => [...prev, results]);
+      setAllGuesses(prev => [...prev, { ...guesses }]);
     } catch (e) {
       console.error(e);
       setError("Something went wrong. Please try again.");
@@ -189,12 +224,7 @@ function Game() {
       navigate(`/leaderboard/${gameId}`);
     } else {
       setCurrentRound(currentRound + 1);
-      setGuesses({
-        driving:   { h: "", m: "" },
-        transit:   { h: "", m: "" },
-        walking:   { h: "", m: "" },
-        bicycling: { h: "", m: "" },
-      });
+      setGuesses({ driving: { h: "", m: "" }, transit: { h: "", m: "" }, walking: { h: "", m: "" }, bicycling: { h: "", m: "" } });
       setActuals(null);
     }
   }
@@ -209,12 +239,8 @@ function Game() {
         <p style={{ color: "#666", marginBottom: 8 }}>You've been invited to play a game in</p>
         <p style={{ fontSize: 20, fontWeight: 600, marginBottom: 24 }}>{game.city}</p>
         <p style={{ fontWeight: 500, marginBottom: 8 }}>Enter a username to join</p>
-        <input
-          placeholder="e.g. caleb"
-          value={usernameInput}
-          onChange={e => setUsernameInput(e.target.value)}
-          style={inputStyle}
-        />
+        <input placeholder="e.g. caleb" value={usernameInput}
+          onChange={e => setUsernameInput(e.target.value)} style={inputStyle} />
         {error && <p style={{ color: "red", fontSize: 13 }}>{error}</p>}
         <button onClick={handleJoin} style={btnStyle}>Join game →</button>
       </div>
@@ -223,6 +249,7 @@ function Game() {
 
   const route = routes[currentRound];
   const totalScore = roundScores.reduce((a, b) => a + b, 0);
+  const isLastRound = currentRound + 1 >= routes.length;
 
   return (
     <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
@@ -251,24 +278,13 @@ function Game() {
           {MODES.map(m => (
             <div key={m.key} style={{ display: "flex", alignItems: "center", marginBottom: 12, gap: 8 }}>
               <span style={{ width: 90 }}>{m.emoji} {m.label}</span>
-              <input
-                type="number"
-                min="0"
-                placeholder="0"
-                value={guesses[m.key].h}
+              <input type="number" min="0" placeholder="0" value={guesses[m.key].h}
                 onChange={e => setGuesses({ ...guesses, [m.key]: { ...guesses[m.key], h: e.target.value } })}
-                style={{ ...inputStyle, width: 55, marginBottom: 0 }}
-              />
+                style={{ ...inputStyle, width: 55, marginBottom: 0 }} />
               <span style={{ color: "#999", fontSize: 13 }}>hr</span>
-              <input
-                type="number"
-                min="0"
-                max="59"
-                placeholder="0"
-                value={guesses[m.key].m}
+              <input type="number" min="0" max="59" placeholder="0" value={guesses[m.key].m}
                 onChange={e => setGuesses({ ...guesses, [m.key]: { ...guesses[m.key], m: e.target.value } })}
-                style={{ ...inputStyle, width: 55, marginBottom: 0 }}
-              />
+                style={{ ...inputStyle, width: 55, marginBottom: 0 }} />
               <span style={{ color: "#999", fontSize: 13 }}>min</span>
             </div>
           ))}
@@ -309,8 +325,18 @@ function Game() {
             )}
           </div>
 
+          {isLastRound && (
+            <ResultsCard
+              city={game.city}
+              routes={routes}
+              roundScores={roundScores}
+              allActuals={allActuals}
+              allGuesses={allGuesses}
+            />
+          )}
+
           <button onClick={handleNextRound} style={btnStyle}>
-            {currentRound + 1 >= routes.length ? "See leaderboard →" : "Next round →"}
+            {isLastRound ? "See leaderboard →" : "Next round →"}
           </button>
         </>
       )}
@@ -319,27 +345,14 @@ function Game() {
 }
 
 const inputStyle = {
-  display: "block",
-  width: "100%",
-  padding: "10px 12px",
-  fontSize: 15,
-  border: "1px solid #ddd",
-  borderRadius: 6,
-  marginBottom: 12,
-  boxSizing: "border-box",
+  display: "block", width: "100%", padding: "10px 12px", fontSize: 15,
+  border: "1px solid #ddd", borderRadius: 6, marginBottom: 12, boxSizing: "border-box",
 };
 
 const btnStyle = {
-  width: "100%",
-  padding: "12px",
-  fontSize: 16,
-  fontWeight: 500,
-  background: "#111",
-  color: "#fff",
-  border: "none",
-  borderRadius: 6,
-  cursor: "pointer",
-  marginTop: 8,
+  width: "100%", padding: "12px", fontSize: 16, fontWeight: 500,
+  background: "#111", color: "#fff", border: "none", borderRadius: 6,
+  cursor: "pointer", marginTop: 8,
 };
 
 export default Game;

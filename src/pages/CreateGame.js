@@ -18,6 +18,7 @@ function CreateGame() {
   const [country, setCountry] = useState("");
   const [city, setCity] = useState("");
   const [username, setUsername] = useState("");
+  const [rounds, setRounds] = useState(3);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -35,11 +36,11 @@ function CreateGame() {
       const gameId = generateGameId(city);
       const allRoutes = CITIES[city];
       const shuffled = [...allRoutes].sort(() => Math.random() - 0.5);
-      const routes = shuffled.slice(0, 3);
+      const routes = shuffled.slice(0, rounds);
 
       const { error: gameError } = await supabase
         .from("games")
-        .insert({ id: gameId, city });
+        .insert({ id: gameId, city, rounds });
       if (gameError) throw gameError;
 
       const routeRows = routes.map((r, i) => ({
@@ -74,7 +75,7 @@ function CreateGame() {
 
   return (
     <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
-      <h1 style={{ fontSize: 28, marginBottom: 4 }}>Create a game</h1>
+      <h1 style={{ fontSize: 28, marginBottom: 4 }}>Classic mode</h1>
       <p style={{ color: "#666", marginBottom: 24 }}>Pick a city and share the link with friends.</p>
 
       <p style={{ fontWeight: 500, marginBottom: 8 }}>Your username</p>
@@ -88,20 +89,14 @@ function CreateGame() {
       <p style={{ fontWeight: 500, marginBottom: 8 }}>Select a country</p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
         {Object.keys(COUNTRIES).map(c => (
-          <button
-            key={c}
-            onClick={() => { setCountry(c); setCity(""); }}
+          <button key={c} onClick={() => { setCountry(c); setCity(""); }}
             style={{
-              padding: "12px",
-              fontSize: 14,
-              borderRadius: 8,
+              padding: "12px", fontSize: 14, borderRadius: 8,
               border: country === c ? "2px solid #111" : "1px solid #ddd",
               background: country === c ? "#111" : "#fff",
               color: country === c ? "#fff" : "#111",
-              cursor: "pointer",
-              fontWeight: country === c ? 600 : 400,
-            }}
-          >
+              cursor: "pointer", fontWeight: country === c ? 600 : 400,
+            }}>
             {c}
           </button>
         ))}
@@ -110,28 +105,38 @@ function CreateGame() {
       {country && (
         <>
           <p style={{ fontWeight: 500, marginBottom: 8 }}>Select a city</p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 24 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
             {availableCities.map(c => (
-              <button
-                key={c}
-                onClick={() => setCity(c)}
+              <button key={c} onClick={() => setCity(c)}
                 style={{
-                  padding: "12px",
-                  fontSize: 14,
-                  borderRadius: 8,
+                  padding: "12px", fontSize: 14, borderRadius: 8,
                   border: city === c ? "2px solid #111" : "1px solid #ddd",
                   background: city === c ? "#111" : "#fff",
                   color: city === c ? "#fff" : "#111",
-                  cursor: "pointer",
-                  fontWeight: city === c ? 600 : 400,
-                }}
-              >
+                  cursor: "pointer", fontWeight: city === c ? 600 : 400,
+                }}>
                 {c}
               </button>
             ))}
           </div>
         </>
       )}
+
+      <p style={{ fontWeight: 500, marginBottom: 8 }}>Number of rounds</p>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 24 }}>
+        {[1, 3].map(n => (
+          <button key={n} onClick={() => setRounds(n)}
+            style={{
+              padding: "12px", fontSize: 14, borderRadius: 8,
+              border: rounds === n ? "2px solid #111" : "1px solid #ddd",
+              background: rounds === n ? "#111" : "#fff",
+              color: rounds === n ? "#fff" : "#111",
+              cursor: "pointer", fontWeight: rounds === n ? 600 : 400,
+            }}>
+            {n} {n === 1 ? "round" : "rounds"}
+          </button>
+        ))}
+      </div>
 
       {error && <p style={{ color: "red", fontSize: 13, marginBottom: 12 }}>{error}</p>}
 
