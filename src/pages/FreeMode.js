@@ -41,13 +41,22 @@ function scoreColor(score) {
   return "#b03030";
 }
 
-function ScoreScale({ score }) {
-  const max = 120;
-  const capped = Math.min(score, max);
-  const pct = (capped / max) * 100;
+function ScoreScale({ guess, actual }) {
+  const ratio = guess / actual;
+  const pct = Math.min(Math.max(ratio, 0), 2) / 2 * 100;
+
   return (
     <div style={{ margin: "8px 0 4px" }}>
-      <div style={{ position: "relative", height: 10, borderRadius: 5, background: "linear-gradient(to right, #1a7a4a, #f0c040, #b03030)" }}>
+      <div style={{ position: "relative", height: 10, borderRadius: 5, background: "linear-gradient(to right, #b03030, #1a7a4a, #b03030)" }}>
+        <div style={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translateY(-50%)",
+          width: 2,
+          height: "100%",
+          background: "rgba(255,255,255,0.5)",
+        }} />
         <div style={{
           position: "absolute",
           top: "50%",
@@ -59,12 +68,13 @@ function ScoreScale({ score }) {
           background: "#3b82f6",
           border: "2px solid white",
           boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
+          zIndex: 1,
         }} />
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#999", marginTop: 4 }}>
+        <span>too low</span>
         <span>🎯 perfect</span>
-        <span>ok</span>
-        <span>way off</span>
+        <span>too high</span>
       </div>
     </div>
   );
@@ -193,7 +203,7 @@ function FreeMode() {
                   <span>Your guess: <strong>{guess} min</strong></span>
                   <span>Actual: <strong>{actual === null ? "No route" : `${actual} min`}</strong></span>
                 </div>
-                {score !== null && <ScoreScale score={score} />}
+                {score !== null && <ScoreScale guess={guess} actual={actual} />}
               </div>
             );
           })}
