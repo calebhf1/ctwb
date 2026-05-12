@@ -20,7 +20,7 @@ function Home() {
         marginBottom: 24,
       }}>
         <div style={{ fontSize: 13, letterSpacing: 4, color: "#999", textTransform: "uppercase", marginBottom: 8 }}>
-        Can You Beat the Map?
+        Think you know your city?
         </div>
         <h1 style={{ fontSize: 48, fontWeight: 700, margin: 0, letterSpacing: -1 }}>CTWB</h1>
         <div style={{ display: "flex", justifyContent: "center", gap: 0, marginTop: 10 }}>
@@ -52,7 +52,7 @@ function Home() {
         marginBottom: 8,
         fontWeight: 400,
       }}>
-        Guess how long it takes to get between two real places — by car, transit, bike, and foot.
+        Guess how long it takes to get between two real places — by car, transit, walking, and biking.
       </p>
       <p style={{
         textAlign: "center",
@@ -60,7 +60,7 @@ function Home() {
         color: "#999",
         marginBottom: 28,
       }}>
-        Lower score wins. Can you beat your friends?
+        Lowest score wins. Can you beat your friends?
       </p>
 
       <div style={{
