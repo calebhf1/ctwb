@@ -166,7 +166,7 @@ function ResultsCard({ route, score, actuals, guesses, today }) {
     `${modeLines[2]}  ${modeLines[3]}`,
     "",
     `${score} pts — ${getScoreMessage(score)}`,
-    "playctwb.vercel.app/daily",
+    "https://playctwb.vercel.app/daily",
   ];
 
   const text = lines.join("\n");
