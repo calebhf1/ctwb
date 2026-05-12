@@ -86,7 +86,7 @@ const CITIES = {
     { origin: "Frederiksted Pier, St Croix", destination: "Point Udall, St Croix" },
     { origin: "Christiansted Boardwalk, St Croix", destination: "Cane Bay, St Croix" },
     { origin: "Christiansted Boardwalk, St Croix", destination: "Point Udall, St Croix" },
-    { origin: "Ziggy's, St Croix USVI", destination: "Cheeseburgers in Paradise, St Croix USVI" },
+    { origin: "Ziggy's, St Croix", destination: "Cheeseburgers in Paradise, St Croix" },
   ],
 
   "Geneva": [

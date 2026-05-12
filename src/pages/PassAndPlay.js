@@ -10,7 +10,7 @@ const MODES = [
 ];
 
 const COUNTRIES = {
-  "🇺🇸 United States": ["Chicago", "New York", "Los Angeles", "San Francisco", "San Diego", "Houston", "Philadelphia", "Washington DC", "Boston", "Miami", "St Croix"],
+  "🇺🇸 United States": ["Chicago", "New York", "Los Angeles", "San Francisco", "San Diego", "Houston", "Philadelphia", "Washington DC", "Boston", "Miami", "St Croix, USVI"],
   "🇨🇭 Switzerland": ["Geneva", "Lausanne", "Bern", "Zurich", "Basel"],
 };
 
