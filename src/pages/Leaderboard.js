@@ -2,6 +2,26 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import supabase from "../supabase";
 
+const CITY_TIMEZONES = {
+  "Chicago": "America/Chicago",
+  "New York": "America/New_York",
+  "Los Angeles": "America/Los_Angeles",
+  "San Francisco": "America/Los_Angeles",
+  "San Diego": "America/Los_Angeles",
+  "Houston": "America/Chicago",
+  "Philadelphia": "America/New_York",
+  "Washington DC": "America/New_York",
+  "Boston": "America/New_York",
+  "Miami": "America/New_York",
+  "St Croix": "America/St_Thomas",
+  "St Croix, USVI": "America/St_Thomas",
+  "Geneva": "Europe/Zurich",
+  "Lausanne": "Europe/Zurich",
+  "Bern": "Europe/Zurich",
+  "Zurich": "Europe/Zurich",
+  "Basel": "Europe/Zurich",
+};
+
 function Leaderboard() {
   const { gameId } = useParams();
   const navigate = useNavigate();
@@ -11,25 +31,6 @@ function Leaderboard() {
 
   useEffect(() => {
     async function loadLeaderboard() {
-      const CITY_TIMEZONES = {
-        "Chicago": "America/Chicago",
-        "New York": "America/New_York",
-        "Los Angeles": "America/Los_Angeles",
-        "San Francisco": "America/Los_Angeles",
-        "San Diego": "America/Los_Angeles",
-        "Houston": "America/Chicago",
-        "Philadelphia": "America/New_York",
-        "Washington DC": "America/New_York",
-        "Boston": "America/New_York",
-        "Miami": "America/New_York",
-        "St Croix": "America/St_Thomas",
-        "Geneva": "Europe/Zurich",
-        "Lausanne": "Europe/Zurich",
-        "Bern": "Europe/Zurich",
-        "Zurich": "Europe/Zurich",
-        "Basel": "Europe/Zurich",
-      };
-
       const { data: gameData } = await supabase
         .from("games")
         .select("*")
@@ -58,31 +59,31 @@ function Leaderboard() {
         .select("*")
         .in("game_id", gameIds);
 
-      const playerTotals = {};
+      const timezone = CITY_TIMEZONES[gameData.city] || "America/Chicago";
+      const playerBest = {};
 
       players.forEach(player => {
         const playerGuesses = guesses.filter(g => g.player_id === player.id);
         if (playerGuesses.length === 0) return;
 
-        const total = playerGuesses.reduce((sum, g) => sum + g.round_score, 0);
-        const lastGuess = [...playerGuesses].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
-        const timezone = CITY_TIMEZONES[gameData.city] || "America/Chicago";
-        const playedAt = lastGuess ? new Date(lastGuess.created_at + "Z").toLocaleString("en-US", {
-        timeZone: timezone,
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-        }) : null;
+        playerGuesses.forEach(g => {
+          const username = player.username;
+          const playedAt = new Date(g.created_at + "Z").toLocaleString("en-US", {
+            timeZone: timezone,
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+          });
 
-        const username = player.username;
-        if (!playerTotals[username] || total < playerTotals[username].total) {
-          playerTotals[username] = { username, total, rounds: playerGuesses.length, playedAt };
-        }
+          if (!playerBest[username] || g.round_score < playerBest[username].total) {
+            playerBest[username] = { username, total: g.round_score, playedAt };
+          }
+        });
       });
 
-      const sorted = Object.values(playerTotals).sort((a, b) => a.total - b.total);
+      const sorted = Object.values(playerBest).sort((a, b) => a.total - b.total);
 
       setGame(gameData);
       setScores(sorted);
@@ -98,8 +99,8 @@ function Leaderboard() {
   return (
     <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
       <h1 style={{ fontSize: 28, marginBottom: 4 }}>Leaderboard</h1>
-      <p style={{ color: "#666", marginBottom: 4 }}>{game?.city} · All time best scores</p>
-      <p style={{ color: "#999", fontSize: 13, marginBottom: 24 }}>Best score per player across all {game?.city} games</p>
+      <p style={{ color: "#666", marginBottom: 4 }}>{game?.city} · Best single round</p>
+      <p style={{ color: "#999", fontSize: 13, marginBottom: 24 }}>Best round score per player across all {game?.city} games</p>
 
       {scores.map((s, i) => (
         <div key={s.username} style={{
@@ -116,14 +117,11 @@ function Leaderboard() {
             <span style={{ fontSize: 20 }}>{medals[i] || `${i + 1}.`}</span>
             <div>
               <div style={{ fontWeight: 600, fontSize: 16 }}>{s.username}</div>
-              <div style={{ fontSize: 12, opacity: 0.6 }}>
-                {s.rounds} round{s.rounds !== 1 ? "s" : ""} · {s.playedAt}
-              </div>
+              <div style={{ fontSize: 12, opacity: 0.6 }}>{s.playedAt}</div>
             </div>
           </div>
           <div style={{ textAlign: "right" }}>
             <div style={{ fontSize: 24, fontWeight: 600 }}>{s.total}</div>
-            <div style={{ fontSize: 11, opacity: 0.6 }}>lower is better</div>
           </div>
         </div>
       ))}

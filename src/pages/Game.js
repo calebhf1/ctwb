@@ -328,11 +328,11 @@ function Game() {
               <span style={{ width: 90 }}>{m.emoji} {m.label}</span>
               <input type="number" min="0" placeholder="0" value={guesses[m.key].h}
                 onChange={e => setGuesses({ ...guesses, [m.key]: { ...guesses[m.key], h: e.target.value } })}
-                style={{ ...inputStyle, width: 55, marginBottom: 0 }} />
+                style={{ ...inputStyle, width: 70, marginBottom: 0 }} />
               <span style={{ color: "#999", fontSize: 13 }}>hr</span>
               <input type="number" min="0" max="59" placeholder="0" value={guesses[m.key].m}
                 onChange={e => setGuesses({ ...guesses, [m.key]: { ...guesses[m.key], m: e.target.value } })}
-                style={{ ...inputStyle, width: 55, marginBottom: 0 }} />
+                style={{ ...inputStyle, width: 70, marginBottom: 0 }} />
               <span style={{ color: "#999", fontSize: 13 }}>min</span>
             </div>
           ))}
