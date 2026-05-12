@@ -62,11 +62,12 @@ function scoreColor(score) {
 }
 
 function getScoreMessage(score) {
-  if (score <= 15) return "legendary 🎯";
-  if (score <= 40) return "impressive!";
-  if (score <= 80) return "solid!";
-  if (score <= 130) return "not bad!";
-  return "keep exploring";
+  if (score <= 20)  return "🏆 Local Legend";
+  if (score <= 50)  return "🗺️ City Slicker";
+  if (score <= 90)  return "🚶 Regular Commuter";
+  if (score <= 140) return "🧭 Getting Oriented";
+  if (score <= 200) return "📸 Day Tripper";
+  return "🧳 Tourist";
 }
 
 function ScoreScale({ score }) {
