@@ -84,6 +84,17 @@ function Home() {
         ))}
       </div>
 
+      <button onClick={() => navigate('/daily')} style={{
+      ...btnStyle,
+      background: "#1a7a4a",
+      color: "#fff",
+      fontSize: 17,
+      padding: "14px",
+      marginBottom: 10,
+    }}>
+      📅 Daily Challenge
+    </button>
+
       <button onClick={() => navigate('/create')} style={{
         ...btnStyle,
         background: "#111",

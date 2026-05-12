@@ -3,9 +3,10 @@ import Home from './pages/Home';
 import CreateGame from './pages/CreateGame';
 import Game from './pages/Game';
 import Leaderboard from './pages/Leaderboard';
-import CityLeaderboard from './pages/CityLeaderboard.js';
+import CityLeaderboard from './pages/CityLeaderboard';
 import FreeMode from './pages/FreeMode';
 import PassAndPlay from './pages/PassAndPlay';
+import DailyChallenge from './pages/DailyChallenge';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/city-leaderboard/:city" element={<CityLeaderboard />} />
         <Route path="/free" element={<FreeMode />} />
         <Route path="/pass-and-play" element={<PassAndPlay />} />
+        <Route path="/daily" element={<DailyChallenge />} />
       </Routes>
     </BrowserRouter>
   );
