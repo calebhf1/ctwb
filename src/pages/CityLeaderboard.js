@@ -72,14 +72,14 @@ function CityLeaderboard() {
       const total = playerGuesses.reduce((sum, g) => sum + g.round_score, 0);
       const lastGuess = [...playerGuesses].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
       const timezone = CITY_TIMEZONES[selectedCity] || "America/Chicago";
-      const playedAt = lastGuess ? new Date(lastGuess.created_at).toLocaleString("en-US", {
+      const playedAt = lastGuess ? new Date(lastGuess.created_at + "Z").toLocaleString("en-US", {
         timeZone: timezone,
         month: "short",
         day: "numeric",
         hour: "numeric",
         minute: "2-digit",
         hour12: true,
-      }) : null;
+        }) : null;
       const username = player.username;
       if (!playerTotals[username] || total < playerTotals[username].total) {
         playerTotals[username] = { username, total, rounds: playerGuesses.length, playedAt };
@@ -152,7 +152,6 @@ function CityLeaderboard() {
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 24, fontWeight: 600 }}>{s.total}</div>
-                <div style={{ fontSize: 11, opacity: 0.6 }}>lower is better</div>
               </div>
             </div>
           ))}

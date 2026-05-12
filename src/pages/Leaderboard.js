@@ -67,13 +67,13 @@ function Leaderboard() {
         const total = playerGuesses.reduce((sum, g) => sum + g.round_score, 0);
         const lastGuess = [...playerGuesses].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
         const timezone = CITY_TIMEZONES[gameData.city] || "America/Chicago";
-        const playedAt = lastGuess ? new Date(lastGuess.created_at).toLocaleString("en-US", {
-          timeZone: timezone,
-          month: "short",
-          day: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
+        const playedAt = lastGuess ? new Date(lastGuess.created_at + "Z").toLocaleString("en-US", {
+        timeZone: timezone,
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
         }) : null;
 
         const username = player.username;
