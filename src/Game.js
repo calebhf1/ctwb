@@ -31,10 +31,10 @@ function Game() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
- function calcScore(guess, actual) {
+function calcScore(guess, actual) {
   if (guess === actual) return 0;
-  const ratio = Math.abs(guess - actual) / actual;
-  return Math.round(ratio * 100);
+  const denominator = Math.max(actual, 10);
+  return Math.round(Math.abs(guess - actual) / denominator * 100);
 }
 
   async function handleSubmit() {

@@ -32,7 +32,8 @@ function toMinutes(h, m) {
 
 function calcScore(guess, actual) {
   if (guess === actual) return 0;
-  return Math.round(Math.abs(guess - actual) / actual * 100);
+  const denominator = Math.max(actual, 10);
+  return Math.round(Math.abs(guess - actual) / denominator * 100);
 }
 
 function scoreColor(score) {
