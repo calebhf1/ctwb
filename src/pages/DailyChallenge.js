@@ -349,37 +349,74 @@ export default function DailyChallenge() {
     );
   }
 
-  if (!username) {
-    return (
-      <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
-          <button onClick={() => navigate('/')} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, padding: 0 }}>←</button>
-          <h1 style={{ fontSize: 28, margin: 0 }}>Daily Challenge</h1>
+ if (!username) {
+  return (
+    <div style={{ maxWidth: 480, margin: "0 auto", fontFamily: "'Georgia', serif", padding: "0 20px", minHeight: "100vh" }}>
+      <div style={{
+        textAlign: "center", paddingTop: 40, paddingBottom: 20,
+        borderBottom: "1px solid #e0e0e0", marginBottom: 24,
+      }}>
+        <div style={{ fontSize: 13, letterSpacing: 2, color: "#999", marginBottom: 8, fontFamily: "sans-serif" }}>
+          Daily Challenge
         </div>
-        <p style={{ color: "#666", marginBottom: 24 }}>{today}</p>
-
-        <div style={{ background: "#f0f9f4", border: "1px solid #c3e6d4", borderRadius: 8, padding: "12px 16px", marginBottom: 24 }}>
-          <p style={{ margin: 0, fontSize: 14, color: "#1a7a4a", fontWeight: 500 }}>
-            📅 One route. One shot. Come back tomorrow for a new challenge.
-          </p>
-        </div>
-
-        <p style={{ fontWeight: 500, marginBottom: 8 }}>Enter a username to join the leaderboard</p>
-        <input
-          placeholder="e.g. caleb"
-          value={usernameInput}
-          onChange={e => setUsernameInput(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && handleSetUsername()}
-          style={inputStyle}
-        />
-        {error && <p style={{ color: "red", fontSize: 13 }}>{error}</p>}
-        <button onClick={handleSetUsername} style={btnStyle}>Let's play →</button>
-        <button onClick={() => setViewingBoard(true)} style={{ ...btnStyle, background: "#fff", color: "#111", border: "1px solid #ddd", marginTop: 8 }}>
-          📊 View today's leaderboard
-        </button>
+        <h1 style={{ fontSize: 42, fontWeight: 700, margin: 0, letterSpacing: -1 }}>CTWB</h1>
+        <div style={{ fontSize: 13, color: "#999", fontFamily: "sans-serif", marginTop: 6 }}>{today}</div>
       </div>
-    );
-  }
+
+      <div style={{ marginBottom: 24 }}>
+        <p style={{ fontSize: 17, lineHeight: 1.6, color: "#222", marginBottom: 12, fontFamily: "sans-serif" }}>
+          Every day, one route. Guess how long it takes to travel between two real places — by <strong>car</strong>, <strong>transit</strong>, <strong>walking</strong>, and <strong>bike</strong>.
+        </p>
+        <p style={{ fontSize: 14, color: "#666", fontFamily: "sans-serif", lineHeight: 1.6 }}>
+          The closer your guess, the lower your score. <strong>0 is perfect.</strong> Compete with everyone on the daily leaderboard.
+        </p>
+      </div>
+
+      <div style={{
+        display: "grid", gridTemplateColumns: "1fr 1fr",
+        gap: 10, marginBottom: 24,
+      }}>
+        {[
+          { emoji: "🗺️", label: "See the route" },
+          { emoji: "⏱️", label: "Guess the times" },
+          { emoji: "📊", label: "Get your score" },
+          { emoji: "🏆", label: "Beat the leaderboard" },
+        ].map(s => (
+          <div key={s.label} style={{
+            background: "#f5f5f5", borderRadius: 8, padding: "12px",
+            display: "flex", alignItems: "center", gap: 10,
+            fontFamily: "sans-serif", fontSize: 13, color: "#444",
+          }}>
+            <span style={{ fontSize: 20 }}>{s.emoji}</span>
+            <span>{s.label}</span>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ background: "#f0f9f4", border: "1px solid #c3e6d4", borderRadius: 8, padding: "12px 16px", marginBottom: 24 }}>
+        <p style={{ margin: 0, fontSize: 14, color: "#1a7a4a", fontWeight: 500, fontFamily: "sans-serif" }}>
+          📅 One route. One shot. Come back tomorrow for a new challenge.
+        </p>
+      </div>
+
+      <p style={{ fontWeight: 600, marginBottom: 8, fontFamily: "sans-serif", fontSize: 15 }}>Pick a username to join the leaderboard</p>
+      <input
+        placeholder="e.g. Lily"
+        value={usernameInput}
+        onChange={e => setUsernameInput(e.target.value)}
+        onKeyDown={e => e.key === "Enter" && handleSetUsername()}
+        style={inputStyle}
+      />
+      {error && <p style={{ color: "red", fontSize: 13, fontFamily: "sans-serif" }}>{error}</p>}
+      <button onClick={handleSetUsername} style={{ ...btnStyle, fontSize: 17, padding: "14px" }}>
+        Let's play →
+      </button>
+      <button onClick={() => setViewingBoard(true)} style={{ ...btnStyle, background: "#fff", color: "#111", border: "1px solid #ddd", marginTop: 8, fontFamily: "sans-serif" }}>
+        📊 View today's leaderboard
+      </button>
+    </div>
+  );
+}
 
   return (
     <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
