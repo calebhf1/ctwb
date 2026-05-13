@@ -21,7 +21,6 @@ const DAILY_ROUTES = [
     city: "Chicago", 
     origin: "Saieh Hall for Economics, University of Chicago, Chicago", 
     destination: "Department of Economics, Northwestern University, Evanston",
-    departureTime: 1778679000,
   },
 ];
 
@@ -447,7 +446,7 @@ export default function DailyChallenge() {
       <p style={{ fontWeight: 500, marginBottom: 4 }}>Today's route</p>
       <p style={{ fontSize: 13, color: "#666", marginBottom: 8 }}>{route.city}</p>
       <p style={{ fontSize: 16, fontWeight: 500, marginBottom: 12 }}>{route.origin} → {route.destination}</p>
-      {route.departureTime && (
+      {route.departureTime && Math.floor(Date.now() / 1000) < route.departureTime && (
         <div style={{
             background: "#fff8e6",
             border: "1px solid #f0d060",
