@@ -143,78 +143,12 @@ function ScoreScale({ guess, actual }) {
   );
 }
 
-import { useEffect, useRef } from "react";
-
 function RouteMap({ origin, destination }) {
-  const mapRef = useRef(null);
-
-  useEffect(() => {
-    let map;
-    let geocoder;
-
-    async function initMap() {
-      if (!window.google || !mapRef.current) return;
-
-      map = new window.google.maps.Map(mapRef.current, {
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: true,
-      });
-
-      geocoder = new window.google.maps.Geocoder();
-
-      const geocode = (address) =>
-        new Promise((resolve, reject) => {
-          geocoder.geocode({ address }, (results, status) => {
-            if (status === "OK" && results[0]) {
-              resolve(results[0].geometry.location);
-            } else {
-              reject(status);
-            }
-          });
-        });
-
-      const [originLoc, destLoc] = await Promise.all([
-        geocode(origin),
-        geocode(destination),
-      ]);
-
-      new window.google.maps.Marker({
-        position: originLoc,
-        map,
-        title: "Origin",
-      });
-
-      new window.google.maps.Marker({
-        position: destLoc,
-        map,
-        title: "Destination",
-      });
-
-      const bounds = new window.google.maps.LatLngBounds();
-      bounds.extend(originLoc);
-      bounds.extend(destLoc);
-      map.fitBounds(bounds, 48);
-    }
-
-    initMap().catch(console.error);
-  }, [origin, destination]);
-
-  return (
-    <div
-      ref={mapRef}
-      style={{
-        width: "100%",
-        height: 300,
-        borderRadius: 8,
-        marginBottom: 16,
-        overflow: "hidden",
-      }}
-    />
-  );
+  const key = process.env.REACT_APP_GOOGLE_MAPS_KEY;
+  const markers = `markers=color:red%7Clabel:A%7C${encodeURIComponent(origin)}&markers=color:blue%7Clabel:B%7C${encodeURIComponent(destination)}`;
+  const url = `https://maps.googleapis.com/maps/api/staticmap?size=480x200&maptype=roadmap&${markers}&key=${key}`;
+  return <img src={url} alt="Route map" style={{ width: "100%", borderRadius: 8, marginBottom: 16 }} />;
 }
-
-export default RouteMap;
 
 function ResultsCard({ route, score, actuals, guesses, today }) {
   const [copied, setCopied] = useState(false);
