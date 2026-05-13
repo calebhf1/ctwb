@@ -777,20 +777,38 @@ export default function DailyChallenge() {
 
           <ResultsCard route={route} score={totalScore} actuals={actuals} guesses={guesses} today={today} />
 
-          {showLocalPrompt && localPromptCity && (
-            <div style={{ background: "#f0f9f4", border: "1px solid #c3e6d4", borderRadius: 12, padding: "20px", marginBottom: 16 }}>
-              <p style={{ fontWeight: 600, fontSize: 16, marginBottom: 8 }}>🌆 Now play in your city!</p>
-              <p style={{ fontSize: 14, color: "#444", marginBottom: 16 }}>
-                We detected you're in <strong>{localPromptCity}</strong>. Want to try a local route and compete with others there today?
-              </p>
-              <button onClick={handleStartLocal} style={{ ...btnStyle, background: "#1a7a4a", marginTop: 0 }}>
-                Play in {localPromptCity} →
-              </button>
-              <button onClick={() => setShowLocalPrompt(false)} style={{ ...btnStyle, background: "#fff", color: "#999", border: "none", marginTop: 4, fontSize: 13 }}>
-                No thanks
-              </button>
-            </div>
-          )}
+          {showLocalPrompt && (
+          <div style={{ background: "#f0f9f4", border: "1px solid #c3e6d4", borderRadius: 12, padding: "20px", marginBottom: 16 }}>
+            <p style={{ fontWeight: 600, fontSize: 16, marginBottom: 8 }}>🌆 Now play in your city!</p>
+            {localPromptCity ? (
+              <>
+                <p style={{ fontSize: 14, color: "#444", marginBottom: 16 }}>
+                  We detected you're in <strong>{localPromptCity}</strong>. Want to try a local route and compete with others there today?
+                </p>
+                <button onClick={handleStartLocal} style={{ ...btnStyle, background: "#1a7a4a", marginTop: 0 }}>
+                  Play in {localPromptCity} →
+                </button>
+              </>
+            ) : (
+              <>
+                <p style={{ fontSize: 14, color: "#444", marginBottom: 12 }}>
+                  Want to play a route in your city and compete with locals?
+                </p>
+                <input
+                  placeholder="Enter your city (e.g. Portland, Maine)"
+                  style={inputStyle}
+                  onChange={e => setDetectedCity(e.target.value)}
+                />
+                <button onClick={handleStartLocal} style={{ ...btnStyle, background: "#1a7a4a", marginTop: 0 }}>
+                  Play in my city →
+                </button>
+              </>
+            )}
+            <button onClick={() => setShowLocalPrompt(false)} style={{ ...btnStyle, background: "#fff", color: "#999", border: "none", marginTop: 4, fontSize: 13 }}>
+              No thanks
+            </button>
+          </div>
+        )}
 
           <div style={{ marginBottom: 24 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
