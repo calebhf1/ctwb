@@ -216,7 +216,10 @@ function ResultsCard({ route, score, actuals, guesses, today }) {
 
 function getTodayRoute() {
   const today = new Date().toISOString().slice(0, 10);
-  return DAILY_ROUTES.find(r => r.date === today) || DAILY_ROUTES[DAILY_ROUTES.length - 1];
+  const exact = DAILY_ROUTES.find(r => r.date === today);
+  if (exact) return exact;
+  const past = DAILY_ROUTES.filter(r => r.date <= today);
+  return past[past.length - 1] || DAILY_ROUTES[0];
 }
 
 function getTodayKey() {
