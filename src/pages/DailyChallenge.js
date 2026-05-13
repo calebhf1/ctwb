@@ -143,22 +143,78 @@ function ScoreScale({ guess, actual }) {
   );
 }
 
+import { useEffect, useRef } from "react";
+
 function RouteMap({ origin, destination }) {
-  const q = encodeURIComponent(`${origin} ${destination}`);
-  const src = `https://www.google.com/maps/embed/v1/search?key=${process.env.REACT_APP_GOOGLE_MAPS_KEY}&q=${q}`;
+  const mapRef = useRef(null);
+
+  useEffect(() => {
+    let map;
+    let geocoder;
+
+    async function initMap() {
+      if (!window.google || !mapRef.current) return;
+
+      map = new window.google.maps.Map(mapRef.current, {
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: true,
+      });
+
+      geocoder = new window.google.maps.Geocoder();
+
+      const geocode = (address) =>
+        new Promise((resolve, reject) => {
+          geocoder.geocode({ address }, (results, status) => {
+            if (status === "OK" && results[0]) {
+              resolve(results[0].geometry.location);
+            } else {
+              reject(status);
+            }
+          });
+        });
+
+      const [originLoc, destLoc] = await Promise.all([
+        geocode(origin),
+        geocode(destination),
+      ]);
+
+      new window.google.maps.Marker({
+        position: originLoc,
+        map,
+        title: "Origin",
+      });
+
+      new window.google.maps.Marker({
+        position: destLoc,
+        map,
+        title: "Destination",
+      });
+
+      const bounds = new window.google.maps.LatLngBounds();
+      bounds.extend(originLoc);
+      bounds.extend(destLoc);
+      map.fitBounds(bounds, 48);
+    }
+
+    initMap().catch(console.error);
+  }, [origin, destination]);
 
   return (
-    <iframe
-      title="Map"
-      src={src}
-      width="100%"
-      height="300"
-      style={{ border: 0, borderRadius: 8, marginBottom: 16 }}
-      allowFullScreen
-      loading="lazy"
+    <div
+      ref={mapRef}
+      style={{
+        width: "100%",
+        height: 300,
+        borderRadius: 8,
+        marginBottom: 16,
+        overflow: "hidden",
+      }}
     />
   );
 }
+
+export default RouteMap;
 
 function ResultsCard({ route, score, actuals, guesses, today }) {
   const [copied, setCopied] = useState(false);
