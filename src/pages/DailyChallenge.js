@@ -21,7 +21,7 @@ const DAILY_ROUTES = [
     city: "Chicago", 
     origin: "Saieh Hall for Economics, University of Chicago, Chicago", 
     destination: "Department of Economics, Northwestern University, Evanston",
-    departureTime: 1747143000,
+    departureTime: 1778679000,
   },
 ];
 
