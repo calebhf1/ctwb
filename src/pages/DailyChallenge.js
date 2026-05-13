@@ -111,7 +111,7 @@ function ScoreScale({ guess, actual }) {
 
   return (
     <div style={{ margin: "8px 0 4px" }}>
-      <div style={{ position: "relative", height: 10, borderRadius: 5, background: "linear-gradient(to right, #b03030, #1a7a4a, #b03030)" }}>
+      <div style={{ position: "relative", height: 10, borderRadius: 5, background: "linear-gradient(to right, #b03030, #e07020, #f0c040, #1a7a4a, #f0c040, #e07020, #b03030)" }}>
         <div style={{
           position: "absolute",
           top: "50%",
