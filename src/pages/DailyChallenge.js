@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import supabase from "../supabase";
-import React from "react"
+import React from "react";
 
 const MODES = [
   { key: "driving",   label: "Car",     emoji: "🚗" },
@@ -11,16 +11,16 @@ const MODES = [
 ];
 
 const DAILY_ROUTES = [
-  { 
-    date: "2026-05-12", 
-    city: "New York", 
-    origin: "Times Square, New York", 
+  {
+    date: "2026-05-12",
+    city: "New York",
+    origin: "Times Square, New York",
     destination: "Brooklyn Bridge, New York",
   },
-  { 
-    date: "2026-05-13", 
-    city: "Chicago", 
-    origin: "Saieh Hall for Economics, University of Chicago, Chicago", 
+  {
+    date: "2026-05-13",
+    city: "Chicago",
+    origin: "Saieh Hall for Economics, University of Chicago, Chicago",
     destination: "Department of Economics, Northwestern University, Evanston",
   },
 ];
@@ -57,15 +57,30 @@ function getCityTime(city) {
   });
 }
 
+function getTodayDate() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
+function getTodayRoute() {
+  const today = getTodayDate();
+  const exact = DAILY_ROUTES.find(r => r.date === today);
+  if (exact) return exact;
+  const past = DAILY_ROUTES.filter(r => r.date <= today);
+  return past[past.length - 1] || DAILY_ROUTES[0];
+}
+
 async function fetchTravelTime(origin, destination, mode, departureTime) {
   const params = new URLSearchParams({ origins: origin, destinations: destination, mode });
   if (departureTime && mode === "driving") {
-    params.set("departure_time", departureTime);
+    const now = Math.floor(Date.now() / 1000);
+    const time = departureTime > now ? departureTime : now;
+    params.set("departure_time", time);
   }
   const response = await fetch(`/api/maps?${params}`);
   const data = await response.json();
-  const element = data.rows[0].elements[0];
-  if (element.status !== "OK") return null;
+  const element = data?.rows?.[0]?.elements?.[0];
+  if (!element || element.status !== "OK") return null;
   const seconds = element.duration_in_traffic
     ? element.duration_in_traffic.value
     : element.duration.value;
@@ -108,37 +123,14 @@ function getScoreMessage(score) {
 function ScoreScale({ guess, actual }) {
   const ratio = guess / actual;
   const pct = Math.min(Math.max(ratio, 0), 2) / 2 * 100;
-
   return (
     <div style={{ margin: "8px 0 4px" }}>
       <div style={{ position: "relative", height: 10, borderRadius: 5, background: "linear-gradient(to right, #b03030, #e07020, #f0c040, #1a7a4a, #f0c040, #e07020, #b03030)" }}>
-        <div style={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translateY(-50%)",
-          width: 2,
-          height: "100%",
-          background: "rgba(255,255,255,0.5)",
-        }} />
-        <div style={{
-          position: "absolute",
-          top: "50%",
-          left: `${pct}%`,
-          transform: "translate(-50%, -50%)",
-          width: 14,
-          height: 14,
-          borderRadius: "50%",
-          background: "#3b82f6",
-          border: "2px solid white",
-          boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
-          zIndex: 1,
-        }} />
+        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translateY(-50%)", width: 2, height: "100%", background: "rgba(255,255,255,0.5)" }} />
+        <div style={{ position: "absolute", top: "50%", left: `${pct}%`, transform: "translate(-50%, -50%)", width: 14, height: 14, borderRadius: "50%", background: "#3b82f6", border: "2px solid white", boxShadow: "0 1px 4px rgba(0,0,0,0.3)", zIndex: 1 }} />
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#999", marginTop: 4 }}>
-        <span>too low</span>
-        <span>🎯 perfect</span>
-        <span>too high</span>
+        <span>too low</span><span>🎯 perfect</span><span>too high</span>
       </div>
     </div>
   );
@@ -146,19 +138,19 @@ function ScoreScale({ guess, actual }) {
 
 function RouteMap({ origin, destination }) {
   const mapRef = React.useRef(null);
+  const mapInstanceRef = React.useRef(null);
+  const boundsRef = React.useRef(null);
   const key = process.env.REACT_APP_GOOGLE_MAPS_KEY;
 
   React.useEffect(() => {
     if (!mapRef.current) return;
-
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&callback=initMap`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places&callback=initMap`;
     script.async = true;
     script.defer = true;
 
     window.initMap = async function () {
       const geocoder = new window.google.maps.Geocoder();
-
       const geocode = (address) => new Promise((resolve) => {
         geocoder.geocode({ address }, (results, status) => {
           if (status === "OK") resolve(results[0].geometry.location);
@@ -166,53 +158,44 @@ function RouteMap({ origin, destination }) {
         });
       });
 
-      const [originLatLng, destLatLng] = await Promise.all([
-        geocode(origin),
-        geocode(destination),
-      ]);
-
+      const [originLatLng, destLatLng] = await Promise.all([geocode(origin), geocode(destination)]);
       if (!originLatLng || !destLatLng) return;
 
       const bounds = new window.google.maps.LatLngBounds();
       bounds.extend(originLatLng);
       bounds.extend(destLatLng);
+      boundsRef.current = bounds;
 
       const map = new window.google.maps.Map(mapRef.current, {
-        mapTypeControl: false,
-        streetViewControl: false,
-        fullscreenControl: false,
+        mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
+        zoomControl: true,
+        zoomControlOptions: { position: window.google.maps.ControlPosition.RIGHT_CENTER },
       });
 
-      map.fitBounds(bounds);
+      mapInstanceRef.current = map;
+      map.fitBounds(bounds, { top: 40, right: 40, bottom: 40, left: 40 });
 
-      new window.google.maps.Marker({
-        position: originLatLng,
-        map,
-        label: { text: "A", color: "white" },
-        title: origin,
-      });
-
-      new window.google.maps.Marker({
-        position: destLatLng,
-        map,
-        label: { text: "B", color: "white" },
-        title: destination,
-      });
+      new window.google.maps.Marker({ position: originLatLng, map, label: { text: "A", color: "white" }, title: origin });
+      new window.google.maps.Marker({ position: destLatLng, map, label: { text: "B", color: "white" }, title: destination });
     };
 
     document.head.appendChild(script);
-
-    return () => {
-      document.head.removeChild(script);
-      delete window.initMap;
-    };
+    return () => { document.head.removeChild(script); delete window.initMap; };
   }, [origin, destination, key]);
 
+  function handleReset() {
+    if (mapInstanceRef.current && boundsRef.current) {
+      mapInstanceRef.current.fitBounds(boundsRef.current, { top: 40, right: 40, bottom: 40, left: 40 });
+    }
+  }
+
   return (
-    <div
-      ref={mapRef}
-      style={{ width: "100%", height: 300, borderRadius: 8, marginBottom: 16, background: "#f0f0f0" }}
-    />
+    <div style={{ marginBottom: 16 }}>
+      <div ref={mapRef} style={{ width: "100%", height: 350, borderRadius: "8px 8px 0 0", background: "#f0f0f0" }} />
+      <button onClick={handleReset} style={{ width: "100%", padding: "8px", fontSize: 13, fontWeight: 500, background: "#f5f5f5", color: "#444", border: "1px solid #ddd", borderTop: "none", borderRadius: "0 0 8px 8px", cursor: "pointer" }}>
+        ↩ Reset view
+      </button>
+    </div>
   );
 }
 
@@ -257,50 +240,45 @@ function ResultsCard({ route, score, actuals, guesses, today }) {
   return (
     <div style={{ background: "#f5f5f5", borderRadius: 12, padding: "20px", marginBottom: 16 }}>
       <p style={{ fontWeight: 600, marginBottom: 12, fontSize: 15 }}>Share your results</p>
-      <div style={{
-        background: "#fff", borderRadius: 8, padding: "16px",
-        fontFamily: "monospace", fontSize: 14, lineHeight: 1.9,
-        marginBottom: 12, whiteSpace: "pre", color: "#111", overflowX: "auto",
-      }}>
+      <div style={{ background: "#fff", borderRadius: 8, padding: "16px", fontFamily: "monospace", fontSize: 14, lineHeight: 1.9, marginBottom: 12, whiteSpace: "pre", color: "#111", overflowX: "auto" }}>
         {text}
       </div>
-      <button onClick={() => {
-        navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      }} style={{
-        width: "100%", padding: "10px", fontSize: 14, fontWeight: 600,
-        background: copied ? "#1a7a4a" : "#111", color: "#fff",
-        border: "none", borderRadius: 6, cursor: "pointer",
-      }}>
+      <button onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2000); }}
+        style={{ width: "100%", padding: "10px", fontSize: 14, fontWeight: 600, background: copied ? "#1a7a4a" : "#111", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" }}>
         {copied ? "✓ Copied!" : "Copy results"}
       </button>
     </div>
   );
 }
 
-function getTodayRoute() {
-  const now = new Date();
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  const exact = DAILY_ROUTES.find(r => r.date === today);
-  if (exact) return exact;
-  const past = DAILY_ROUTES.filter(r => r.date <= today);
-  return past[past.length - 1] || DAILY_ROUTES[0];
-}
-
-function getTodayKey() {
-  const now = new Date();
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  return `ctwb_daily_${today}`;
+async function generateLocalRoute(lat, lng, city) {
+  return new Promise((resolve) => {
+    if (!window.google?.maps?.places) { resolve(null); return; }
+    const div = document.createElement("div");
+    const service = new window.google.maps.places.PlacesService(div);
+    service.nearbySearch({
+      location: { lat, lng },
+      radius: 8000,
+      type: "tourist_attraction",
+    }, (results, status) => {
+      if (status !== "OK" || !results || results.length < 2) { resolve(null); return; }
+      const filtered = results.filter(r => r.name && r.vicinity);
+      if (filtered.length < 2) { resolve(null); return; }
+      const shuffled = [...filtered].sort(() => Math.random() - 0.5);
+      resolve({
+        origin: shuffled[0].name + ", " + city,
+        destination: shuffled[1].name + ", " + city,
+      });
+    });
+  });
 }
 
 export default function DailyChallenge() {
   const navigate = useNavigate();
   const route = getTodayRoute();
-  const storageKey = getTodayKey();
+  const todayDate = getTodayDate();
+  const storageKey = `ctwb_daily_${todayDate}`;
   const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-  const now = new Date();
-  const todayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
   const savedResult = (() => {
     try { return JSON.parse(localStorage.getItem(storageKey)); } catch { return null; }
@@ -309,10 +287,8 @@ export default function DailyChallenge() {
   const [username, setUsername] = useState(localStorage.getItem("ctwb_daily_username") || "");
   const [usernameInput, setUsernameInput] = useState("");
   const [guesses, setGuesses] = useState(savedResult?.guesses || {
-    driving:   { h: "", m: "" },
-    transit:   { h: "", m: "" },
-    walking:   { h: "", m: "" },
-    bicycling: { h: "", m: "" },
+    driving: { h: "", m: "" }, transit: { h: "", m: "" },
+    walking: { h: "", m: "" }, bicycling: { h: "", m: "" },
   });
   const [actuals, setActuals] = useState(savedResult?.actuals || null);
   const [totalScore, setTotalScore] = useState(savedResult?.totalScore ?? null);
@@ -322,9 +298,41 @@ export default function DailyChallenge() {
   const [loadingBoard, setLoadingBoard] = useState(true);
   const [viewingBoard, setViewingBoard] = useState(false);
 
+  // IP detection
+  const [detectedCity, setDetectedCity] = useState(null);
+  const [detectedLat, setDetectedLat] = useState(null);
+  const [detectedLng, setDetectedLng] = useState(null);
+
+  // local challenge
+  const [localChallenge, setLocalChallenge] = useState(null);
+  const [showLocalPrompt, setShowLocalPrompt] = useState(false);
+  const [playingLocal, setPlayingLocal] = useState(false);
+  const [localGuesses, setLocalGuesses] = useState({
+    driving: { h: "", m: "" }, transit: { h: "", m: "" },
+    walking: { h: "", m: "" }, bicycling: { h: "", m: "" },
+  });
+  const [localActuals, setLocalActuals] = useState(null);
+  const [localScore, setLocalScore] = useState(null);
+  const [localSubmitting, setLocalSubmitting] = useState(false);
+  const [localError, setLocalError] = useState("");
+  const [localLeaderboard, setLocalLeaderboard] = useState([]);
+
   useEffect(() => {
     loadLeaderboard();
+    detectLocation();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function detectLocation() {
+    try {
+      const res = await fetch("https://ipapi.co/json/");
+      const data = await res.json();
+      setDetectedCity(data.city);
+      setDetectedLat(data.latitude);
+      setDetectedLng(data.longitude);
+    } catch (e) {
+      console.error("Could not detect location", e);
+    }
+  }
 
   async function loadLeaderboard() {
     setLoadingBoard(true);
@@ -336,6 +344,102 @@ export default function DailyChallenge() {
       .limit(10);
     setLeaderboard(data || []);
     setLoadingBoard(false);
+  }
+
+  async function loadLocalLeaderboard(city) {
+    const { data } = await supabase
+      .from("local_scores")
+      .select("username, total_score")
+      .eq("date", todayDate)
+      .eq("city", city)
+      .order("total_score", { ascending: true })
+      .limit(10);
+    setLocalLeaderboard(data || []);
+  }
+
+  async function handleStartLocal() {
+    if (!detectedCity || !detectedLat || !detectedLng) return;
+
+    // check if local challenge already exists for this city today
+    const { data: existing } = await supabase
+      .from("local_challenges")
+      .select("*")
+      .eq("date", todayDate)
+      .eq("city", detectedCity)
+      .single();
+
+    if (existing) {
+      setLocalChallenge(existing);
+      await loadLocalLeaderboard(detectedCity);
+      setPlayingLocal(true);
+      return;
+    }
+
+    // generate new route
+    const generated = await generateLocalRoute(detectedLat, detectedLng, detectedCity);
+    if (!generated) {
+      alert("Couldn't find landmarks in your city. Try again later!");
+      return;
+    }
+
+    const { data: created } = await supabase
+      .from("local_challenges")
+      .insert({
+        date: todayDate,
+        city: detectedCity,
+        origin: generated.origin,
+        destination: generated.destination,
+        lat: detectedLat,
+        lng: detectedLng,
+      })
+      .select()
+      .single();
+
+    setLocalChallenge(created);
+    await loadLocalLeaderboard(detectedCity);
+    setPlayingLocal(true);
+  }
+
+  async function handleSubmitLocal() {
+    for (const m of MODES) {
+      const total = toMinutes(localGuesses[m.key].h, localGuesses[m.key].m);
+      if (total === 0) return setLocalError(`Enter a guess for ${m.label}.`);
+    }
+    setLocalError("");
+    setLocalSubmitting(true);
+
+    try {
+      const results = await fetchAllModes(localChallenge.origin, localChallenge.destination);
+      const score = MODES.reduce((sum, m) => {
+        if (results[m.key] === null) return sum;
+        return sum + calcScore(toMinutes(localGuesses[m.key].h, localGuesses[m.key].m), results[m.key]);
+      }, 0);
+
+      await supabase.from("local_scores").insert({
+        username,
+        date: todayDate,
+        city: detectedCity,
+        origin: localChallenge.origin,
+        destination: localChallenge.destination,
+        driving_guess:  toMinutes(localGuesses.driving.h,   localGuesses.driving.m),
+        transit_guess:  toMinutes(localGuesses.transit.h,   localGuesses.transit.m),
+        walking_guess:  toMinutes(localGuesses.walking.h,   localGuesses.walking.m),
+        cycling_guess:  toMinutes(localGuesses.bicycling.h, localGuesses.bicycling.m),
+        driving_actual:  results.driving,
+        transit_actual:  results.transit,
+        walking_actual:  results.walking,
+        cycling_actual:  results.bicycling,
+        total_score: score,
+      });
+
+      setLocalActuals(results);
+      setLocalScore(score);
+      await loadLocalLeaderboard(detectedCity);
+    } catch (e) {
+      console.error(e);
+      setLocalError("Something went wrong. Please try again.");
+    }
+    setLocalSubmitting(false);
   }
 
   function handleSetUsername() {
@@ -361,28 +465,22 @@ export default function DailyChallenge() {
       }, 0);
 
       await supabase.from("daily_scores").insert({
-        username,
-        date: todayDate,
-        city: route.city,
-        origin: route.origin,
-        destination: route.destination,
+        username, date: todayDate, city: route.city,
+        origin: route.origin, destination: route.destination,
         driving_guess:  toMinutes(guesses.driving.h,   guesses.driving.m),
         transit_guess:  toMinutes(guesses.transit.h,   guesses.transit.m),
         walking_guess:  toMinutes(guesses.walking.h,   guesses.walking.m),
         cycling_guess:  toMinutes(guesses.bicycling.h, guesses.bicycling.m),
-        driving_actual:  results.driving,
-        transit_actual:  results.transit,
-        walking_actual:  results.walking,
-        cycling_actual:  results.bicycling,
+        driving_actual: results.driving, transit_actual: results.transit,
+        walking_actual: results.walking, cycling_actual: results.bicycling,
         total_score: score,
       });
 
       setActuals(results);
       setTotalScore(score);
-      localStorage.setItem(storageKey, JSON.stringify({
-        guesses, actuals: results, totalScore: score,
-      }));
+      localStorage.setItem(storageKey, JSON.stringify({ guesses, actuals: results, totalScore: score }));
       await loadLeaderboard();
+      setShowLocalPrompt(true);
     } catch (e) {
       console.error(e);
       setError("Something went wrong. Please try again.");
@@ -390,6 +488,103 @@ export default function DailyChallenge() {
     setSubmitting(false);
   }
 
+  // LOCAL CHALLENGE PLAY VIEW
+  if (playingLocal && localChallenge) {
+    return (
+      <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
+          <button onClick={() => setPlayingLocal(false)} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, padding: 0 }}>←</button>
+          <h1 style={{ fontSize: 28, margin: 0 }}>Play in {detectedCity}</h1>
+        </div>
+        <p style={{ color: "#666", marginBottom: 16 }}>{today} · Local challenge</p>
+
+        <p style={{ fontWeight: 500, marginBottom: 4 }}>Route</p>
+        <p style={{ fontSize: 15, fontWeight: 500, marginBottom: 12 }}>{localChallenge.origin} → {localChallenge.destination}</p>
+        <RouteMap origin={localChallenge.origin} destination={localChallenge.destination} />
+
+        {!localActuals ? (
+          <>
+            <div style={{ background: "#f5f5f5", borderRadius: 8, padding: "10px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#666" }}>
+              <span>🕐</span>
+              <span>Local time in {detectedCity}: <strong style={{ color: "#111" }}>{getCityTime(detectedCity)}</strong></span>
+            </div>
+            <p style={{ fontWeight: 500, marginBottom: 12 }}>Your guesses:</p>
+            {MODES.map(m => (
+              <div key={m.key} style={{ display: "flex", alignItems: "center", marginBottom: 12, gap: 8 }}>
+                <span style={{ width: 90 }}>{m.emoji} {m.label}</span>
+                <input type="number" min="0" placeholder="0" value={localGuesses[m.key].h}
+                  onChange={e => setLocalGuesses({ ...localGuesses, [m.key]: { ...localGuesses[m.key], h: e.target.value } })}
+                  style={{ ...inputStyle, width: 70, marginBottom: 0 }} />
+                <span style={{ color: "#999", fontSize: 13 }}>hr</span>
+                <input type="number" min="0" max="59" placeholder="0" value={localGuesses[m.key].m}
+                  onChange={e => setLocalGuesses({ ...localGuesses, [m.key]: { ...localGuesses[m.key], m: e.target.value } })}
+                  style={{ ...inputStyle, width: 70, marginBottom: 0 }} />
+                <span style={{ color: "#999", fontSize: 13 }}>min</span>
+              </div>
+            ))}
+            {localError && <p style={{ color: "red", fontSize: 13 }}>{localError}</p>}
+            <button onClick={handleSubmitLocal} disabled={localSubmitting} style={btnStyle}>
+              {localSubmitting ? "Looking up times…" : "Submit guesses"}
+            </button>
+          </>
+        ) : (
+          <>
+            <p style={{ fontWeight: 500, marginBottom: 16 }}>{localChallenge.origin} → {localChallenge.destination}</p>
+            {MODES.map(m => {
+              const actual = localActuals[m.key];
+              const guess = toMinutes(localGuesses[m.key].h, localGuesses[m.key].m);
+              const score = actual === null ? null : calcScore(guess, actual);
+              return (
+                <div key={m.key} style={{ background: "#f5f5f5", borderRadius: 8, padding: "12px 16px", marginBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                    <span style={{ fontWeight: 500 }}>{m.emoji} {m.label}</span>
+                    <span style={{ fontWeight: 500, color: score === null ? "#999" : scoreColor(score) }}>
+                      {score === null ? "N/A" : `${score} pts`}
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", gap: 24, fontSize: 14, color: "#444" }}>
+                    <span>Your guess: <strong>{guess} min</strong></span>
+                    <span>Actual: <strong>{actual === null ? "No route" : `${actual} min`}</strong></span>
+                  </div>
+                  {score !== null && <ScoreScale guess={guess} actual={actual} />}
+                </div>
+              );
+            })}
+
+            <div style={{ background: "#111", color: "#fff", borderRadius: 8, padding: "16px", textAlign: "center", margin: "20px 0" }}>
+              <div style={{ fontSize: 13, marginBottom: 4, color: "#aaa" }}>{detectedCity} score</div>
+              <div style={{ fontSize: 48, fontWeight: 600 }}>{localScore}</div>
+              <div style={{ fontSize: 14, color: "#aaa", marginTop: 6 }}>{getScoreMessage(localScore)}</div>
+            </div>
+
+            <p style={{ fontWeight: 600, fontSize: 16, marginBottom: 12 }}>{detectedCity} leaderboard today</p>
+            {localLeaderboard.map((s, i) => (
+              <div key={s.username + i} style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                background: s.username === username ? "#f0f9f4" : "#f5f5f5",
+                border: s.username === username ? "1px solid #c3e6d4" : "none",
+                borderRadius: 8, padding: "12px 16px", marginBottom: 8,
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <span style={{ fontSize: 18 }}>{medals[i] || `${i + 1}.`}</span>
+                  <span style={{ fontWeight: 600 }}>{s.username}</span>
+                  {s.username === username && <span style={{ fontSize: 12, color: "#1a7a4a" }}>you</span>}
+                </div>
+                <span style={{ fontWeight: 600, fontSize: 18 }}>{s.total_score}</span>
+              </div>
+            ))}
+            {localLeaderboard.length === 0 && <p style={{ color: "#999" }}>You're the first to play in {detectedCity} today!</p>}
+
+            <button onClick={() => navigate('/')} style={{ ...btnStyle, background: "#fff", color: "#111", border: "1px solid #ddd", marginTop: 8 }}>
+              ← Back to home
+            </button>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  // LEADERBOARD VIEW
   if (viewingBoard) {
     return (
       <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
@@ -399,14 +594,9 @@ export default function DailyChallenge() {
         </div>
         <p style={{ color: "#666", marginBottom: 24 }}>{today} · {route.city}</p>
         {loadingBoard && <p style={{ color: "#999" }}>Loading…</p>}
-        {!loadingBoard && leaderboard.length === 0 && (
-          <p style={{ color: "#999" }}>No scores yet today — be the first!</p>
-        )}
+        {!loadingBoard && leaderboard.length === 0 && <p style={{ color: "#999" }}>No scores yet today — be the first!</p>}
         {!loadingBoard && leaderboard.map((s, i) => (
-          <div key={s.username + i} style={{
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            background: "#f5f5f5", borderRadius: 8, padding: "12px 16px", marginBottom: 8,
-          }}>
+          <div key={s.username + i} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f5f5f5", borderRadius: 8, padding: "12px 16px", marginBottom: 8 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 18 }}>{medals[i] || `${i + 1}.`}</span>
               <span style={{ fontWeight: 600 }}>{s.username}</span>
@@ -414,81 +604,66 @@ export default function DailyChallenge() {
             <span style={{ fontWeight: 600, fontSize: 18 }}>{s.total_score}</span>
           </div>
         ))}
-        <button onClick={() => setViewingBoard(false)} style={{ ...btnStyle, background: "#fff", color: "#111", border: "1px solid #ddd", marginTop: 16 }}>
-          ← Back
+        <button onClick={() => setViewingBoard(false)} style={{ ...btnStyle, background: "#fff", color: "#111", border: "1px solid #ddd", marginTop: 16 }}>← Back</button>
+      </div>
+    );
+  }
+
+  // USERNAME ENTRY
+  if (!username) {
+    return (
+      <div style={{ maxWidth: 480, margin: "0 auto", fontFamily: "'Georgia', serif", padding: "0 20px", minHeight: "100vh" }}>
+        <div style={{ textAlign: "center", paddingTop: 40, paddingBottom: 20, borderBottom: "1px solid #e0e0e0", marginBottom: 24 }}>
+          <div style={{ fontSize: 13, letterSpacing: 2, color: "#999", marginBottom: 8, fontFamily: "sans-serif" }}>Daily Challenge</div>
+          <h1 style={{ fontSize: 42, fontWeight: 700, margin: 0, letterSpacing: -1 }}>CTWB</h1>
+          <div style={{ fontSize: 13, color: "#999", fontFamily: "sans-serif", marginTop: 6 }}>{today}</div>
+        </div>
+
+        <div style={{ marginBottom: 24 }}>
+          <p style={{ fontSize: 17, lineHeight: 1.6, color: "#222", marginBottom: 12, fontFamily: "sans-serif" }}>
+            Every day, one route. Guess how long it takes to travel between two real places — by <strong>car</strong>, <strong>transit</strong>, <strong>walking</strong>, and <strong>bike</strong>.
+          </p>
+          <p style={{ fontSize: 14, color: "#666", fontFamily: "sans-serif", lineHeight: 1.6 }}>
+            The closer your guess, the lower your score. <strong>0 is perfect.</strong> Compete with everyone on the daily leaderboard.
+          </p>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 24 }}>
+          {[
+            { emoji: "🗺️", label: "See the route" },
+            { emoji: "⏱️", label: "Guess the times" },
+            { emoji: "📊", label: "Get your score" },
+            { emoji: "🏆", label: "Beat the leaderboard" },
+          ].map(s => (
+            <div key={s.label} style={{ background: "#f5f5f5", borderRadius: 8, padding: "12px", display: "flex", alignItems: "center", gap: 10, fontFamily: "sans-serif", fontSize: 13, color: "#444" }}>
+              <span style={{ fontSize: 20 }}>{s.emoji}</span>
+              <span>{s.label}</span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ background: "#f0f9f4", border: "1px solid #c3e6d4", borderRadius: 8, padding: "12px 16px", marginBottom: 24 }}>
+          <p style={{ margin: 0, fontSize: 14, color: "#1a7a4a", fontWeight: 500, fontFamily: "sans-serif" }}>
+            📅 One route. One shot. Come back tomorrow for a new challenge.
+          </p>
+        </div>
+
+        <p style={{ fontWeight: 600, marginBottom: 8, fontFamily: "sans-serif", fontSize: 15 }}>Pick a username to join the leaderboard</p>
+        <input placeholder="e.g. Lily" value={usernameInput}
+          onChange={e => setUsernameInput(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && handleSetUsername()}
+          style={inputStyle} />
+        {error && <p style={{ color: "red", fontSize: 13, fontFamily: "sans-serif" }}>{error}</p>}
+        <button onClick={handleSetUsername} style={{ ...btnStyle, fontSize: 17, padding: "14px" }}>Let's play →</button>
+        <button onClick={() => setViewingBoard(true)} style={{ ...btnStyle, background: "#fff", color: "#111", border: "1px solid #ddd", marginTop: 8, fontFamily: "sans-serif" }}>
+          📊 View today's leaderboard
         </button>
       </div>
     );
   }
 
- if (!username) {
-  return (
-    <div style={{ maxWidth: 480, margin: "0 auto", fontFamily: "'Georgia', serif", padding: "0 20px", minHeight: "100vh" }}>
-      <div style={{
-        textAlign: "center", paddingTop: 40, paddingBottom: 20,
-        borderBottom: "1px solid #e0e0e0", marginBottom: 24,
-      }}>
-        <div style={{ fontSize: 13, letterSpacing: 2, color: "#999", marginBottom: 8, fontFamily: "sans-serif" }}>
-          Daily Challenge
-        </div>
-        <h1 style={{ fontSize: 42, fontWeight: 700, margin: 0, letterSpacing: -1 }}>CTWB</h1>
-        <div style={{ fontSize: 13, color: "#999", fontFamily: "sans-serif", marginTop: 6 }}>{today}</div>
-      </div>
-
-      <div style={{ marginBottom: 24 }}>
-        <p style={{ fontSize: 17, lineHeight: 1.6, color: "#222", marginBottom: 12, fontFamily: "sans-serif" }}>
-          Every day, one route. Guess how long it takes to travel between two real places — by <strong>car</strong>, <strong>transit</strong>, <strong>walking</strong>, and <strong>bike</strong>.
-        </p>
-        <p style={{ fontSize: 14, color: "#666", fontFamily: "sans-serif", lineHeight: 1.6 }}>
-          The closer your guess, the lower your score. <strong>0 is perfect.</strong> Compete with everyone on the daily leaderboard.
-        </p>
-      </div>
-
-      <div style={{
-        display: "grid", gridTemplateColumns: "1fr 1fr",
-        gap: 10, marginBottom: 24,
-      }}>
-        {[
-          { emoji: "🗺️", label: "See the route" },
-          { emoji: "⏱️", label: "Guess the times" },
-          { emoji: "📊", label: "Get your score" },
-          { emoji: "🏆", label: "Beat the leaderboard" },
-        ].map(s => (
-          <div key={s.label} style={{
-            background: "#f5f5f5", borderRadius: 8, padding: "12px",
-            display: "flex", alignItems: "center", gap: 10,
-            fontFamily: "sans-serif", fontSize: 13, color: "#444",
-          }}>
-            <span style={{ fontSize: 20 }}>{s.emoji}</span>
-            <span>{s.label}</span>
-          </div>
-        ))}
-      </div>
-
-      <div style={{ background: "#f0f9f4", border: "1px solid #c3e6d4", borderRadius: 8, padding: "12px 16px", marginBottom: 24 }}>
-        <p style={{ margin: 0, fontSize: 14, color: "#1a7a4a", fontWeight: 500, fontFamily: "sans-serif" }}>
-          📅 One route. One shot. Come back tomorrow for a new challenge.
-        </p>
-      </div>
-
-      <p style={{ fontWeight: 600, marginBottom: 8, fontFamily: "sans-serif", fontSize: 15 }}>Pick a username to join the leaderboard</p>
-      <input
-        placeholder="e.g. Lily"
-        value={usernameInput}
-        onChange={e => setUsernameInput(e.target.value)}
-        onKeyDown={e => e.key === "Enter" && handleSetUsername()}
-        style={inputStyle}
-      />
-      {error && <p style={{ color: "red", fontSize: 13, fontFamily: "sans-serif" }}>{error}</p>}
-      <button onClick={handleSetUsername} style={{ ...btnStyle, fontSize: 17, padding: "14px" }}>
-        Let's play →
-      </button>
-      <button onClick={() => setViewingBoard(true)} style={{ ...btnStyle, background: "#fff", color: "#111", border: "1px solid #ddd", marginTop: 8, fontFamily: "sans-serif" }}>
-        📊 View today's leaderboard
-      </button>
-    </div>
-  );
-}
+  // MAIN GAME VIEW
+  const localPromptCity = detectedCity && detectedCity !== route.city ? detectedCity : null;
 
   return (
     <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
@@ -513,35 +688,19 @@ export default function DailyChallenge() {
       <p style={{ fontSize: 13, color: "#666", marginBottom: 8 }}>{route.city}</p>
       <p style={{ fontSize: 16, fontWeight: 500, marginBottom: 12 }}>{route.origin} → {route.destination}</p>
       {route.departureTime && Math.floor(Date.now() / 1000) < route.departureTime && (
-        <div style={{
-            background: "#fff8e6",
-            border: "1px solid #f0d060",
-            borderRadius: 8,
-            padding: "10px 16px",
-            marginBottom: 12,
-            fontSize: 13,
-            color: "#7a5a00",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-        }}>
-            <span>⏰</span>
-            <span>Today's times are fixed at <strong>8:30am local time</strong> — think rush hour!</span>
+        <div style={{ background: "#fff8e6", border: "1px solid #f0d060", borderRadius: 8, padding: "10px 16px", marginBottom: 12, fontSize: 13, color: "#7a5a00", display: "flex", alignItems: "center", gap: 8 }}>
+          <span>⏰</span>
+          <span>Today's times are fixed at <strong>8:30am local time</strong> — think rush hour!</span>
         </div>
-        )}
+      )}
       <RouteMap origin={route.origin} destination={route.destination} />
 
       {!actuals ? (
         <>
-          <div style={{
-            background: "#f5f5f5", borderRadius: 8, padding: "10px 16px",
-            marginBottom: 16, display: "flex", alignItems: "center", gap: 8,
-            fontSize: 13, color: "#666",
-          }}>
+          <div style={{ background: "#f5f5f5", borderRadius: 8, padding: "10px 16px", marginBottom: 16, display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: "#666" }}>
             <span>🕐</span>
             <span>Local time in {route.city}: <strong style={{ color: "#111" }}>{getCityTime(route.city)}</strong></span>
           </div>
-
           <p style={{ fontWeight: 500, marginBottom: 12 }}>Your guesses:</p>
           {MODES.map(m => (
             <div key={m.key} style={{ display: "flex", alignItems: "center", marginBottom: 12, gap: 8 }}>
@@ -594,25 +753,30 @@ export default function DailyChallenge() {
             <div style={{ fontSize: 14, color: "#aaa", marginTop: 6 }}>{getScoreMessage(totalScore)}</div>
           </div>
 
-          <ResultsCard
-            route={route}
-            score={totalScore}
-            actuals={actuals}
-            guesses={guesses}
-            today={today}
-          />
+          <ResultsCard route={route} score={totalScore} actuals={actuals} guesses={guesses} today={today} />
+
+          {showLocalPrompt && localPromptCity && (
+            <div style={{ background: "#f0f9f4", border: "1px solid #c3e6d4", borderRadius: 12, padding: "20px", marginBottom: 16 }}>
+              <p style={{ fontWeight: 600, fontSize: 16, marginBottom: 8 }}>🌆 Now play in your city!</p>
+              <p style={{ fontSize: 14, color: "#444", marginBottom: 16 }}>
+                We detected you're in <strong>{localPromptCity}</strong>. Want to try a local route and compete with others there today?
+              </p>
+              <button onClick={handleStartLocal} style={{ ...btnStyle, background: "#1a7a4a", marginTop: 0 }}>
+                Play in {localPromptCity} →
+              </button>
+              <button onClick={() => setShowLocalPrompt(false)} style={{ ...btnStyle, background: "#fff", color: "#999", border: "none", marginTop: 4, fontSize: 13 }}>
+                No thanks
+              </button>
+            </div>
+          )}
 
           <div style={{ marginBottom: 24 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
               <p style={{ fontWeight: 600, fontSize: 16, margin: 0 }}>Today's leaderboard</p>
-              <button onClick={loadLeaderboard} style={{ fontSize: 12, color: "#666", background: "none", border: "none", cursor: "pointer" }}>
-                Refresh
-              </button>
+              <button onClick={loadLeaderboard} style={{ fontSize: 12, color: "#666", background: "none", border: "none", cursor: "pointer" }}>Refresh</button>
             </div>
             {loadingBoard && <p style={{ color: "#999", fontSize: 14 }}>Loading…</p>}
-            {!loadingBoard && leaderboard.length === 0 && (
-              <p style={{ color: "#999" }}>No scores yet — you're the first!</p>
-            )}
+            {!loadingBoard && leaderboard.length === 0 && <p style={{ color: "#999" }}>No scores yet — you're the first!</p>}
             {!loadingBoard && leaderboard.map((s, i) => (
               <div key={s.username + i} style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
