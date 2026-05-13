@@ -258,21 +258,26 @@ async function generateLocalRoute(lat, lng, city) {
     fields: ["displayName", "location"],
     locationRestriction: {
       center: { lat, lng },
-      radius: 8000,
+      radius: 15000,
     },
     includedPrimaryTypes: ["tourist_attraction"],
-    maxResultCount: 10,
+    maxResultCount: 20,
     rankPreference: SearchNearbyRankPreference.POPULARITY,
   };
 
   const { places } = await Place.searchNearby(request);
-  
   if (!places || places.length < 2) return null;
-  
-  const shuffled = [...places].sort(() => Math.random() - 0.5);
+
+  // pick from opposite ends of the list to maximize distance
+  const shuffledFirst = places.slice(0, 10).sort(() => Math.random() - 0.5);
+  const shuffledSecond = places.slice(10).sort(() => Math.random() - 0.5);
+
+  const origin = shuffledFirst[0];
+  const destination = shuffledSecond[0] || shuffledFirst[1];
+
   return {
-    origin: shuffled[0].displayName + ", " + city,
-    destination: shuffled[1].displayName + ", " + city,
+    origin: origin.displayName + ", " + city,
+    destination: destination.displayName + ", " + city,
   };
 }
 
