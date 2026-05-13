@@ -322,23 +322,22 @@ export default function DailyChallenge() {
     detectLocation();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function detectLocation() {
+ async function detectLocation() {
   // temporary test override
   setDetectedCity("New York");
   setDetectedLat(40.7128);
   setDetectedLng(-74.0060);
-  return;
-  
-  try {
-    const res = await fetch("https://ipapi.co/json/");
-    const data = await res.json();
-    console.log("Detected city:", data.city);
-    setDetectedCity(data.city);
-    setDetectedLat(data.latitude);
-    setDetectedLng(data.longitude);
-  } catch (e) {
-    console.error("Could not detect location", e);
-  }
+
+  // try {
+  //   const res = await fetch("https://ipapi.co/json/");
+  //   const data = await res.json();
+  //   console.log("Detected city:", data.city);
+  //   setDetectedCity(data.city);
+  //   setDetectedLat(data.latitude);
+  //   setDetectedLng(data.longitude);
+  // } catch (e) {
+  //   console.error("Could not detect location", e);
+  // }
 }
 
   async function loadLeaderboard() {
