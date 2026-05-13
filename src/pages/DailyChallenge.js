@@ -144,10 +144,18 @@ function ScoreScale({ guess, actual }) {
 }
 
 function RouteMap({ origin, destination }) {
-  const key = process.env.REACT_APP_GOOGLE_MAPS_KEY;
-  const markers = `markers=color:red%7Clabel:A%7C${encodeURIComponent(origin)}&markers=color:blue%7Clabel:B%7C${encodeURIComponent(destination)}`;
-  const url = `https://maps.googleapis.com/maps/api/staticmap?size=480x200&maptype=roadmap&${markers}&key=${key}`;
-  return <img src={url} alt="Route map" style={{ width: "100%", borderRadius: 8, marginBottom: 16 }} />;
+  const src = `https://www.google.com/maps/embed/v1/directions?key=${process.env.REACT_APP_GOOGLE_MAPS_KEY}&origin=${encodeURIComponent(origin)}&destination=${encodeURIComponent(destination)}&mode=driving`;
+  return (
+    <iframe
+      title="Route map"
+      src={src}
+      width="100%"
+      height="300"
+      style={{ border: 0, borderRadius: 8, marginBottom: 16 }}
+      allowFullScreen
+      loading="lazy"
+    />
+  );
 }
 
 function ResultsCard({ route, score, actuals, guesses, today }) {
