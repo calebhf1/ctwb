@@ -10,21 +10,6 @@ const MODES = [
   { key: "bicycling", label: "Bike",    emoji: "🚲" },
 ];
 
-// const DAILY_ROUTES = [
-//   {
-//     date: "2026-05-12",
-//     city: "New York",
-//     origin: "Times Square, New York",
-//     destination: "Brooklyn Bridge, New York",
-//   },
-//   {
-//     date: "2026-05-13",
-//     city: "Chicago",
-//     origin: "Saieh Hall for Economics, University of Chicago, Chicago",
-//     destination: "Department of Economics, Northwestern University, Evanston",
-//   },
-// ];
-
 const DAILY_ROUTES = [
   {
     date: "2026-05-12",
@@ -34,11 +19,18 @@ const DAILY_ROUTES = [
   },
   {
     date: "2026-05-13",
+    city: "Chicago",
+    origin: "Saieh Hall for Economics, University of Chicago, Chicago",
+    destination: "Department of Economics, Northwestern University, Evanston",
+  },
+  {
+    date: "2026-05-14",
     city: "Paris, France",
     origin: "Eiffel Tower, Paris, France",
     destination: "Louvre Museum, Paris, France",
   },
 ];
+
 
 const medals = ["🥇", "🥈", "🥉"];
 
@@ -59,6 +51,7 @@ const CITY_TIMEZONES = {
   "Bern": "Europe/Zurich",
   "Zurich": "Europe/Zurich",
   "Basel": "Europe/Zurich",
+  "Paris": "Europe/Paris",
 };
 
 function getCityTime(city) {
