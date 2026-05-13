@@ -145,7 +145,7 @@ function RouteMap({ origin, destination }) {
   React.useEffect(() => {
     if (!mapRef.current) return;
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places&callback=initMap`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&loading=async&callback=initMap`;
     script.async = true;
     script.defer = true;
 
@@ -252,25 +252,28 @@ function ResultsCard({ route, score, actuals, guesses, today }) {
 }
 
 async function generateLocalRoute(lat, lng, city) {
-  return new Promise((resolve) => {
-    if (!window.google?.maps?.places) { resolve(null); return; }
-    const div = document.createElement("div");
-    const service = new window.google.maps.places.PlacesService(div);
-    service.nearbySearch({
-      location: { lat, lng },
+  const { Place, SearchNearbyRankPreference } = await window.google.maps.importLibrary("places");
+  
+  const request = {
+    fields: ["displayName", "location"],
+    locationRestriction: {
+      center: { lat, lng },
       radius: 8000,
-      type: "tourist_attraction",
-    }, (results, status) => {
-      if (status !== "OK" || !results || results.length < 2) { resolve(null); return; }
-      const filtered = results.filter(r => r.name && r.vicinity);
-      if (filtered.length < 2) { resolve(null); return; }
-      const shuffled = [...filtered].sort(() => Math.random() - 0.5);
-      resolve({
-        origin: shuffled[0].name + ", " + city,
-        destination: shuffled[1].name + ", " + city,
-      });
-    });
-  });
+    },
+    includedPrimaryTypes: ["tourist_attraction"],
+    maxResultCount: 10,
+    rankPreference: SearchNearbyRankPreference.POPULARITY,
+  };
+
+  const { places } = await Place.searchNearby(request);
+  
+  if (!places || places.length < 2) return null;
+  
+  const shuffled = [...places].sort(() => Math.random() - 0.5);
+  return {
+    origin: shuffled[0].displayName + ", " + city,
+    destination: shuffled[1].displayName + ", " + city,
+  };
 }
 
 export default function DailyChallenge() {
@@ -368,11 +371,11 @@ export default function DailyChallenge() {
 
     // check if local challenge already exists for this city today
     const { data: existing } = await supabase
-      .from("local_challenges")
-      .select("*")
-      .eq("date", todayDate)
-      .eq("city", detectedCity)
-      .single();
+    .from("local_challenges")
+    .select("*")
+    .eq("date", todayDate)
+    .eq("city", detectedCity)
+    .maybeSingle();
 
     if (existing) {
       setLocalChallenge(existing);
