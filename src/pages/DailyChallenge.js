@@ -215,7 +215,8 @@ function ResultsCard({ route, score, actuals, guesses, today }) {
 }
 
 function getTodayRoute() {
-  const today = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const exact = DAILY_ROUTES.find(r => r.date === today);
   if (exact) return exact;
   const past = DAILY_ROUTES.filter(r => r.date <= today);
@@ -223,7 +224,9 @@ function getTodayRoute() {
 }
 
 function getTodayKey() {
-  return `ctwb_daily_${new Date().toISOString().slice(0, 10)}`;
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  return `ctwb_daily_${today}`;
 }
 
 export default function DailyChallenge() {
@@ -231,7 +234,8 @@ export default function DailyChallenge() {
   const route = getTodayRoute();
   const storageKey = getTodayKey();
   const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
-  const todayDate = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const todayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
   const savedResult = (() => {
     try { return JSON.parse(localStorage.getItem(storageKey)); } catch { return null; }
