@@ -144,19 +144,18 @@ function ScoreScale({ guess, actual }) {
 }
 
 function RouteMap({ origin, destination }) {
-  const center = encodeURIComponent(`${origin} to ${destination}`);
-  const src = `https://www.google.com/maps/embed/v1/search?key=${process.env.REACT_APP_GOOGLE_MAPS_KEY}&q=${center}`;
+  const q = encodeURIComponent(`${origin} ${destination}`);
+  const src = `https://www.google.com/maps/embed/v1/search?key=${process.env.REACT_APP_GOOGLE_MAPS_KEY}&q=${q}`;
 
   return (
     <iframe
-      title="Route area map"
+      title="Map"
       src={src}
       width="100%"
       height="300"
       style={{ border: 0, borderRadius: 8, marginBottom: 16 }}
       allowFullScreen
       loading="lazy"
-      referrerPolicy="no-referrer-when-downgrade"
     />
   );
 }
