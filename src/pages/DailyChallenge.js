@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import supabase from "../supabase";
+import React from "react"
 
 const MODES = [
   { key: "driving",   label: "Car",     emoji: "🚗" },
@@ -144,10 +145,75 @@ function ScoreScale({ guess, actual }) {
 }
 
 function RouteMap({ origin, destination }) {
+  const mapRef = React.useRef(null);
   const key = process.env.REACT_APP_GOOGLE_MAPS_KEY;
-  const markers = `markers=color:red%7Clabel:A%7C${encodeURIComponent(origin)}&markers=color:blue%7Clabel:B%7C${encodeURIComponent(destination)}`;
-  const url = `https://maps.googleapis.com/maps/api/staticmap?size=480x200&maptype=roadmap&${markers}&key=${key}`;
-  return <img src={url} alt="Route map" style={{ width: "100%", borderRadius: 8, marginBottom: 16 }} />;
+
+  React.useEffect(() => {
+    if (!mapRef.current) return;
+
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&callback=initMap`;
+    script.async = true;
+    script.defer = true;
+
+    window.initMap = async function () {
+      const geocoder = new window.google.maps.Geocoder();
+
+      const geocode = (address) => new Promise((resolve) => {
+        geocoder.geocode({ address }, (results, status) => {
+          if (status === "OK") resolve(results[0].geometry.location);
+          else resolve(null);
+        });
+      });
+
+      const [originLatLng, destLatLng] = await Promise.all([
+        geocode(origin),
+        geocode(destination),
+      ]);
+
+      if (!originLatLng || !destLatLng) return;
+
+      const bounds = new window.google.maps.LatLngBounds();
+      bounds.extend(originLatLng);
+      bounds.extend(destLatLng);
+
+      const map = new window.google.maps.Map(mapRef.current, {
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+      });
+
+      map.fitBounds(bounds);
+
+      new window.google.maps.Marker({
+        position: originLatLng,
+        map,
+        label: { text: "A", color: "white" },
+        title: origin,
+      });
+
+      new window.google.maps.Marker({
+        position: destLatLng,
+        map,
+        label: { text: "B", color: "white" },
+        title: destination,
+      });
+    };
+
+    document.head.appendChild(script);
+
+    return () => {
+      document.head.removeChild(script);
+      delete window.initMap;
+    };
+  }, [origin, destination, key]);
+
+  return (
+    <div
+      ref={mapRef}
+      style={{ width: "100%", height: 300, borderRadius: 8, marginBottom: 16, background: "#f0f0f0" }}
+    />
+  );
 }
 
 function ResultsCard({ route, score, actuals, guesses, today }) {
