@@ -29,6 +29,12 @@ const DAILY_ROUTES = [
     origin: "Eiffel Tower, Paris, France",
     destination: "Louvre Museum, Paris, France",
   },
+  {
+  date: "2026-05-15",
+  city: "London, UK",
+  origin: "Buckingham Palace, London, UK",
+  destination: "London Bridge, London, UK",
+},
 ];
 
 const medals = ["🥇", "🥈", "🥉"];
@@ -51,6 +57,7 @@ const CITY_TIMEZONES = {
   "Zurich": "Europe/Zurich",
   "Basel": "Europe/Zurich",
   "Paris, France": "Europe/Paris",
+  "London, UK": "Europe/London",
 };
 
 function getCityTime(city) {
