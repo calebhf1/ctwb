@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import Home from './pages/Home';
 import CreateGame from './pages/CreateGame';
 import Game from './pages/Game';
@@ -11,6 +12,7 @@ import DailyChallenge from './pages/DailyChallenge';
 function App() {
   return (
     <BrowserRouter>
+      <Analytics />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/create" element={<CreateGame />} />
