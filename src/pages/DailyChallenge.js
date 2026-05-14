@@ -51,7 +51,7 @@ const CITY_TIMEZONES = {
   "Bern": "Europe/Zurich",
   "Zurich": "Europe/Zurich",
   "Basel": "Europe/Zurich",
-  "Paris": "Europe/Paris",
+  "Paris, France": "Europe/Paris",
 };
 
 function getCityTime(city) {
