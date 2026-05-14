@@ -31,7 +31,6 @@ const DAILY_ROUTES = [
   },
 ];
 
-
 const medals = ["🥇", "🥈", "🥉"];
 
 const CITY_TIMEZONES = {
@@ -182,7 +181,6 @@ function RouteMap({ origin, destination }) {
 
       mapInstanceRef.current = map;
       map.fitBounds(bounds, { top: 40, right: 40, bottom: 40, left: 40 });
-
       new window.google.maps.Marker({ position: originLatLng, map, label: { text: "A", color: "white" }, title: origin });
       new window.google.maps.Marker({ position: destLatLng, map, label: { text: "B", color: "white" }, title: destination });
     };
@@ -261,28 +259,19 @@ function ResultsCard({ route, score, actuals, guesses, today }) {
 
 async function generateLocalRoute(lat, lng, city) {
   const { Place, SearchNearbyRankPreference } = await window.google.maps.importLibrary("places");
-  
   const request = {
     fields: ["displayName", "location"],
-    locationRestriction: {
-      center: { lat, lng },
-      radius: 15000,
-    },
+    locationRestriction: { center: { lat, lng }, radius: 15000 },
     includedPrimaryTypes: ["tourist_attraction"],
     maxResultCount: 20,
     rankPreference: SearchNearbyRankPreference.POPULARITY,
   };
-
   const { places } = await Place.searchNearby(request);
   if (!places || places.length < 2) return null;
-
-  // pick from opposite ends of the list to maximize distance
   const shuffledFirst = places.slice(0, 10).sort(() => Math.random() - 0.5);
   const shuffledSecond = places.slice(10).sort(() => Math.random() - 0.5);
-
   const origin = shuffledFirst[0];
   const destination = shuffledSecond[0] || shuffledFirst[1];
-
   return {
     origin: origin.displayName + ", " + city,
     destination: destination.displayName + ", " + city,
@@ -310,18 +299,17 @@ export default function DailyChallenge() {
   const [totalScore, setTotalScore] = useState(savedResult?.totalScore ?? null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [hoursWarning, setHoursWarning] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
   const [loadingBoard, setLoadingBoard] = useState(true);
   const [viewingBoard, setViewingBoard] = useState(false);
 
-  // IP detection
   const [detectedCity, setDetectedCity] = useState(null);
   const [detectedLat, setDetectedLat] = useState(null);
   const [detectedLng, setDetectedLng] = useState(null);
 
-  // local challenge
   const [localChallenge, setLocalChallenge] = useState(null);
-  const [showLocalPrompt, setShowLocalPrompt] = useState(false);
+  const [showLocalPrompt, setShowLocalPrompt] = useState(!!savedResult?.actuals);
   const [playingLocal, setPlayingLocal] = useState(false);
   const [localGuesses, setLocalGuesses] = useState({
     driving: { h: "", m: "" }, transit: { h: "", m: "" },
@@ -338,23 +326,18 @@ export default function DailyChallenge() {
     detectLocation();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
- async function detectLocation() {
-  // temporary test override
-  // setDetectedCity("New York");
-  // setDetectedLat(40.7128);
-  // setDetectedLng(-74.0060);
-
-  try {
-    const res = await fetch("https://ipapi.co/json/");
-    const data = await res.json();
-    console.log("Detected city:", data.city);
-    setDetectedCity(data.city);
-    setDetectedLat(data.latitude);
-    setDetectedLng(data.longitude);
-  } catch (e) {
-    console.error("Could not detect location", e);
+  async function detectLocation() {
+    try {
+      const res = await fetch("https://ipapi.co/json/");
+      const data = await res.json();
+      console.log("Detected city:", data.city);
+      setDetectedCity(data.city);
+      setDetectedLat(data.latitude);
+      setDetectedLng(data.longitude);
+    } catch (e) {
+      console.error("Could not detect location", e);
+    }
   }
-}
 
   async function loadLeaderboard() {
     setLoadingBoard(true);
@@ -382,13 +365,12 @@ export default function DailyChallenge() {
   async function handleStartLocal() {
     if (!detectedCity || !detectedLat || !detectedLng) return;
 
-    // check if local challenge already exists for this city today
     const { data: existing } = await supabase
-    .from("local_challenges")
-    .select("*")
-    .eq("date", todayDate)
-    .eq("city", detectedCity)
-    .maybeSingle();
+      .from("local_challenges")
+      .select("*")
+      .eq("date", todayDate)
+      .eq("city", detectedCity)
+      .maybeSingle();
 
     if (existing) {
       setLocalChallenge(existing);
@@ -397,7 +379,6 @@ export default function DailyChallenge() {
       return;
     }
 
-    // generate new route
     const generated = await generateLocalRoute(detectedLat, detectedLng, detectedCity);
     if (!generated) {
       alert("Couldn't find landmarks in your city. Try again later!");
@@ -438,19 +419,14 @@ export default function DailyChallenge() {
       }, 0);
 
       await supabase.from("local_scores").insert({
-        username,
-        date: todayDate,
-        city: detectedCity,
-        origin: localChallenge.origin,
-        destination: localChallenge.destination,
+        username, date: todayDate, city: detectedCity,
+        origin: localChallenge.origin, destination: localChallenge.destination,
         driving_guess:  toMinutes(localGuesses.driving.h,   localGuesses.driving.m),
         transit_guess:  toMinutes(localGuesses.transit.h,   localGuesses.transit.m),
         walking_guess:  toMinutes(localGuesses.walking.h,   localGuesses.walking.m),
         cycling_guess:  toMinutes(localGuesses.bicycling.h, localGuesses.bicycling.m),
-        driving_actual:  results.driving,
-        transit_actual:  results.transit,
-        walking_actual:  results.walking,
-        cycling_actual:  results.bicycling,
+        driving_actual: results.driving, transit_actual: results.transit,
+        walking_actual: results.walking, cycling_actual: results.bicycling,
         total_score: score,
       });
 
@@ -472,6 +448,13 @@ export default function DailyChallenge() {
   }
 
   async function handleSubmit() {
+    const highHours = MODES.some(m => parseInt(guesses[m.key].h) > 10);
+    if (highHours && !hoursWarning) {
+      setHoursWarning(true);
+      return;
+    }
+    setHoursWarning(false);
+
     for (const m of MODES) {
       const total = toMinutes(guesses[m.key].h, guesses[m.key].m);
       if (total === 0) return setError(`Enter a guess for ${m.label}.`);
@@ -510,7 +493,6 @@ export default function DailyChallenge() {
     setSubmitting(false);
   }
 
-  // LOCAL CHALLENGE PLAY VIEW
   if (playingLocal && localChallenge) {
     return (
       <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
@@ -606,7 +588,6 @@ export default function DailyChallenge() {
     );
   }
 
-  // LEADERBOARD VIEW
   if (viewingBoard) {
     return (
       <div style={{ maxWidth: 480, margin: "40px auto", fontFamily: "sans-serif", padding: "0 20px" }}>
@@ -631,7 +612,6 @@ export default function DailyChallenge() {
     );
   }
 
-  // USERNAME ENTRY
   if (!username) {
     return (
       <div style={{ maxWidth: 480, margin: "0 auto", fontFamily: "'Georgia', serif", padding: "0 20px", minHeight: "100vh" }}>
@@ -684,7 +664,6 @@ export default function DailyChallenge() {
     );
   }
 
-  // MAIN GAME VIEW
   const localPromptCity = detectedCity && detectedCity !== route.city ? detectedCity : null;
 
   return (
@@ -737,6 +716,28 @@ export default function DailyChallenge() {
               <span style={{ color: "#999", fontSize: 13 }}>min</span>
             </div>
           ))}
+
+          {hoursWarning && (
+            <div style={{ background: "#fff8e6", border: "1px solid #f0d060", borderRadius: 8, padding: "12px 16px", marginBottom: 12 }}>
+              <p style={{ fontWeight: 600, fontSize: 14, marginBottom: 6, color: "#7a5a00" }}>
+                ⚠️ Did you mean minutes?
+              </p>
+              <p style={{ fontSize: 13, color: "#7a5a00", marginBottom: 12 }}>
+                One of your guesses is over 10 hours — that seems high! Did you accidentally enter minutes in the hours box?
+              </p>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={() => { setHoursWarning(false); handleSubmit(); }}
+                  style={{ flex: 1, padding: "8px", fontSize: 13, fontWeight: 600, background: "#111", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" }}>
+                  No, it's correct
+                </button>
+                <button onClick={() => setHoursWarning(false)}
+                  style={{ flex: 1, padding: "8px", fontSize: 13, fontWeight: 600, background: "#fff", color: "#111", border: "1px solid #ddd", borderRadius: 6, cursor: "pointer" }}>
+                  Let me fix it
+                </button>
+              </div>
+            </div>
+          )}
+
           {error && <p style={{ color: "red", fontSize: 13 }}>{error}</p>}
           <button onClick={handleSubmit} disabled={submitting} style={btnStyle}>
             {submitting ? "Looking up times…" : "Submit guesses"}
@@ -778,37 +779,46 @@ export default function DailyChallenge() {
           <ResultsCard route={route} score={totalScore} actuals={actuals} guesses={guesses} today={today} />
 
           {showLocalPrompt && (
-          <div style={{ background: "#f0f9f4", border: "1px solid #c3e6d4", borderRadius: 12, padding: "20px", marginBottom: 16 }}>
-            <p style={{ fontWeight: 600, fontSize: 16, marginBottom: 8 }}>🌆 Now play in your city!</p>
-            {localPromptCity ? (
-              <>
-                <p style={{ fontSize: 14, color: "#444", marginBottom: 16 }}>
-                  We detected you're in <strong>{localPromptCity}</strong>. Want to try a local route and compete with others there today?
-                </p>
-                <button onClick={handleStartLocal} style={{ ...btnStyle, background: "#1a7a4a", marginTop: 0 }}>
-                  Play in {localPromptCity} →
-                </button>
-              </>
-            ) : (
-              <>
-                <p style={{ fontSize: 14, color: "#444", marginBottom: 12 }}>
-                  Want to play a route in your city and compete with locals?
-                </p>
-                <input
-                  placeholder="Enter your city (e.g. Portland, Maine)"
-                  style={inputStyle}
-                  onChange={e => setDetectedCity(e.target.value)}
-                />
-                <button onClick={handleStartLocal} style={{ ...btnStyle, background: "#1a7a4a", marginTop: 0 }}>
-                  Play in my city →
-                </button>
-              </>
-            )}
-            <button onClick={() => setShowLocalPrompt(false)} style={{ ...btnStyle, background: "#fff", color: "#999", border: "none", marginTop: 4, fontSize: 13 }}>
-              No thanks
-            </button>
-          </div>
-        )}
+            <div style={{ background: "#f0f9f4", border: "1px solid #c3e6d4", borderRadius: 12, padding: "20px", marginBottom: 16 }}>
+              <p style={{ fontWeight: 600, fontSize: 16, marginBottom: 8 }}>🌆 Now play in your city!</p>
+              {localPromptCity ? (
+                <>
+                  <p style={{ fontSize: 14, color: "#444", marginBottom: 16 }}>
+                    We detected you're in <strong>{localPromptCity}</strong>. Want to try a local route and compete with others there today?
+                  </p>
+                  <button onClick={handleStartLocal} style={{ ...btnStyle, background: "#1a7a4a", marginTop: 0 }}>
+                    Play in {localPromptCity} →
+                  </button>
+                  <p style={{ fontSize: 13, color: "#999", marginTop: 8, marginBottom: 4 }}>Not your city?</p>
+                  <input
+                    placeholder="Enter your city (e.g. Portland, Maine)"
+                    style={{ ...inputStyle, marginBottom: 8 }}
+                    onChange={e => setDetectedCity(e.target.value)}
+                  />
+                  <button onClick={handleStartLocal} style={{ ...btnStyle, background: "#1a7a4a", marginTop: 0 }}>
+                    Play here instead →
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p style={{ fontSize: 14, color: "#444", marginBottom: 12 }}>
+                    Play a route in your city and compete with locals today!
+                  </p>
+                  <input
+                    placeholder="Enter your city (e.g. Portland, Maine)"
+                    style={{ ...inputStyle, marginBottom: 8 }}
+                    onChange={e => setDetectedCity(e.target.value)}
+                  />
+                  <button onClick={handleStartLocal} style={{ ...btnStyle, background: "#1a7a4a", marginTop: 0 }}>
+                    Play in my city →
+                  </button>
+                </>
+              )}
+              <button onClick={() => setShowLocalPrompt(false)} style={{ ...btnStyle, background: "#fff", color: "#999", border: "none", marginTop: 4, fontSize: 13 }}>
+                No thanks
+              </button>
+            </div>
+          )}
 
           <div style={{ marginBottom: 24 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
