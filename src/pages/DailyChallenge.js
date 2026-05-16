@@ -35,7 +35,14 @@ const DAILY_ROUTES = [
   origin: "Buckingham Palace, London, UK",
   destination: "London Bridge, London, UK",
 },
+{
+   date: "2026-05-16",
+  city: "Tokyo, Japan",
+  origin: "Tokyo Tower, Tokyo, Japan",
+  destination: "Senso-ji Temple, Tokyo, Japan",
+  },
 ];
+
 
 const medals = ["🥇", "🥈", "🥉"];
 
@@ -58,6 +65,8 @@ const CITY_TIMEZONES = {
   "Basel": "Europe/Zurich",
   "Paris, France": "Europe/Paris",
   "London, UK": "Europe/London",
+  Tokyo: "Asia/Tokyo",
+  
 };
 
 function getCityTime(city) {
