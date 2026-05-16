@@ -36,7 +36,7 @@ const DAILY_ROUTES = [
   destination: "London Bridge, London, UK",
 },
 {
-   date: "2026-05-16",
+  date: "2026-05-16",
   city: "Tokyo, Japan",
   origin: "Tokyo Tower, Tokyo, Japan",
   destination: "Senso-ji Temple, Tokyo, Japan",
@@ -65,7 +65,7 @@ const CITY_TIMEZONES = {
   "Basel": "Europe/Zurich",
   "Paris, France": "Europe/Paris",
   "London, UK": "Europe/London",
-  Tokyo: "Asia/Tokyo",
+  "Tokyo, Japan": "Asia/Tokyo",
   
 };
 
