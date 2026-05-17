@@ -41,6 +41,12 @@ const DAILY_ROUTES = [
   origin: "Tokyo Tower, Tokyo, Japan",
   destination: "Senso-ji Temple, Tokyo, Japan",
   },
+  {
+  date: "2026-05-17",
+  city: "Singapore",
+  origin: "Singapore Changi Airport, Singapore",
+  destination: "Gardens by the Bay, Singapore",
+},
 ];
 
 
@@ -66,6 +72,7 @@ const CITY_TIMEZONES = {
   "Paris, France": "Europe/Paris",
   "London, UK": "Europe/London",
   "Tokyo, Japan": "Asia/Tokyo",
+  "Singapore": "Asia/Singapore",
   
 };
 
