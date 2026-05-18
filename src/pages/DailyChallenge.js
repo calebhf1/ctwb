@@ -47,6 +47,12 @@ const DAILY_ROUTES = [
   origin: "Singapore Changi Airport, Singapore",
   destination: "Gardens by the Bay, Singapore",
 },
+  {
+  date: "2026-05-18",
+  city: "Miami",
+  origin: "Miami Children's Museum, Miami",
+  destination: "LIV Nightclub, Miami",
+},
 ];
 
 
