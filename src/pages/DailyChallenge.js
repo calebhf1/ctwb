@@ -53,6 +53,12 @@ const DAILY_ROUTES = [
   origin: "Miami Children's Museum, Miami",
   destination: "LIV Nightclub, Miami",
 },
+ {
+  date: "2026-05-20",
+  city: "São Paulo, Brazil",
+  origin: "Sé Cathedral, São Paulo, Brazil",
+  destination: "São Paulo Museum of Art, São Paulo, Brazil",
+},
 ];
 
 
@@ -79,6 +85,7 @@ const CITY_TIMEZONES = {
   "London, UK": "Europe/London",
   "Tokyo, Japan": "Asia/Tokyo",
   "Singapore": "Asia/Singapore",
+  "São Paulo, Brazil": "America/Sao_Paulo"
   
 };
 
