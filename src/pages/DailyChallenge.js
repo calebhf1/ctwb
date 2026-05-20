@@ -77,6 +77,18 @@ const DAILY_ROUTES = [
   origin: "Sydney Opera House, Sydney, Australia",
   destination: "Bondi Beach, Sydney, Australia",
 },
+{
+  date: "2026-05-24",
+  city: "Berlin, Germany",
+  origin: "Brandenburg Gate, Berlin, Germany",
+  destination: "East Side Gallery, Berlin, Germany",
+},
+{
+  date: "2026-05-25",
+  city: "Mexico City, Mexico",
+  origin: "Zócalo, Mexico City, Mexico",
+  destination: "Chapultepec Castle, Mexico City, Mexico",
+},
 ];
 
 
@@ -106,7 +118,9 @@ const CITY_TIMEZONES = {
   "São Paulo, Brazil": "America/Sao_Paulo",
   "Montreal, Canada": "America/Toronto",
   "Copenhagen, Denmark": "Europe/Copenhagen",
-  "Sydney, Australia": "Australia/Sydney"
+  "Sydney, Australia": "Australia/Sydney",
+  "Berlin, Germany": "Europe/Berlin",
+  "Mexico City, Mexico": "America/Mexico_City"
 
 };
 
