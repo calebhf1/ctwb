@@ -59,6 +59,12 @@ const DAILY_ROUTES = [
   origin: "Sé Cathedral, São Paulo, Brazil",
   destination: "São Paulo Museum of Art, São Paulo, Brazil",
 },
+{
+  date: "2026-05-21",
+  city: "Montreal, Canada",
+  origin: "Old Port of Montreal, Montreal, Canada",
+  destination: "Mont Royal Park, Montreal, Canada",
+},
 ];
 
 
@@ -85,7 +91,8 @@ const CITY_TIMEZONES = {
   "London, UK": "Europe/London",
   "Tokyo, Japan": "Asia/Tokyo",
   "Singapore": "Asia/Singapore",
-  "São Paulo, Brazil": "America/Sao_Paulo"
+  "São Paulo, Brazil": "America/Sao_Paulo",
+  "Montreal, Canada": "America/Toronto",
   
 };
 
