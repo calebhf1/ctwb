@@ -65,6 +65,18 @@ const DAILY_ROUTES = [
   origin: "Old Port of Montreal, Montreal, Canada",
   destination: "Mont Royal Park, Montreal, Canada",
 },
+{
+  date: "2026-05-22",
+  city: "Copenhagen, Denmark",
+  origin: "Rosenborg Castle, Copenhagen, Denmark",
+  destination: "Copenhagen Contemporary, Copenhagen, Denmark",
+},
+{
+  date: "2026-05-23",
+  city: "Sydney, Australia",
+  origin: "Sydney Opera House, Sydney, Australia",
+  destination: "Bondi Beach, Sydney, Australia",
+},
 ];
 
 
@@ -93,7 +105,9 @@ const CITY_TIMEZONES = {
   "Singapore": "Asia/Singapore",
   "São Paulo, Brazil": "America/Sao_Paulo",
   "Montreal, Canada": "America/Toronto",
-  
+  "Copenhagen, Denmark": "Europe/Copenhagen",
+  "Sydney, Australia": "Australia/Sydney"
+
 };
 
 function getCityTime(city) {
