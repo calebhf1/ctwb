@@ -248,6 +248,7 @@ function RouteMap({ origin, destination }) {
         mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
         zoomControl: true,
         zoomControlOptions: { position: window.google.maps.ControlPosition.RIGHT_CENTER },
+        scaleControl: true,
       });
 
       mapInstanceRef.current = map;
