@@ -89,6 +89,12 @@ const DAILY_ROUTES = [
   origin: "Zócalo, Mexico City, Mexico",
   destination: "Chapultepec Castle, Mexico City, Mexico",
 },
+{
+  date: "2026-05-26",
+  city: "Seattle, WA",
+  origin: "Pike Place Market, Seattle, WA",
+  destination: "Capitol Hill Station, Seattle, WA",
+},
 ];
 
 
@@ -120,7 +126,8 @@ const CITY_TIMEZONES = {
   "Copenhagen, Denmark": "Europe/Copenhagen",
   "Sydney, Australia": "Australia/Sydney",
   "Berlin, Germany": "Europe/Berlin",
-  "Mexico City, Mexico": "America/Mexico_City"
+  "Mexico City, Mexico": "America/Mexico_City",
+  "Seattle, WA": "America/Los_Angeles",
 
 };
 
