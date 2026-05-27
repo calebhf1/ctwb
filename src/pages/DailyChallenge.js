@@ -95,6 +95,12 @@ const DAILY_ROUTES = [
   origin: "Pike Place Market, Seattle, WA",
   destination: "Capitol Hill Station, Seattle, WA",
 },
+{
+  date: "2026-05-27",
+  city: "Istanbul, Turkey",
+  origin: "Hagia Sophia, Istanbul, Turkey",
+  destination: "Galata Tower, Istanbul, Turkey",
+},
 ];
 
 
@@ -128,6 +134,7 @@ const CITY_TIMEZONES = {
   "Berlin, Germany": "Europe/Berlin",
   "Mexico City, Mexico": "America/Mexico_City",
   "Seattle, WA": "America/Los_Angeles",
+  "Istanbul, Turkey": "Europe/Istanbul",
 
 };
 
