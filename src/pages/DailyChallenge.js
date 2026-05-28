@@ -167,7 +167,7 @@ function IOSInstallBanner() {
           style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#999", padding: 0, marginLeft: 8 }}>✕</button>
       </div>
       <p style={{ color: "#444", marginBottom: 0, lineHeight: 1.5 }}>
-        Tap <strong>⋯</strong> → <strong>Share</strong> → scroll down → <strong>"Add to Home Screen"</strong>. Then open CTWB from your home screen and tap "Notify me tomorrow".
+        Tap <strong>⋯</strong> → <strong>Share</strong> → scroll down → <strong>"Add to Home Screen"</strong>. Then open CTWB from your home screen and after playing today's challenge tap "Notify me tomorrow".
       </p>
     </div>
   );
