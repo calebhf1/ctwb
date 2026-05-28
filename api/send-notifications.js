@@ -7,9 +7,9 @@ export default async function handler(req, res) {
   }
 
   const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-);
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY
+  );
 
   const { data: subscribers } = await supabase
     .from("push_subscribers")
@@ -20,41 +20,40 @@ export default async function handler(req, res) {
   }
 
   const accessToken = await getAccessToken();
+  let successCount = 0;
 
-  const message = {
-    notification: {
-      title: "CTWB Daily Challenge 📅",
-      body: "Today's challenge is live — can you top the leaderboard?",
-    },
-    webpush: {
-      fcm_options: {
-        link: "https://playctwb.vercel.app/daily",
-      },
-    },
-    tokens: subscribers.map(s => s.token),
-  };
-
-  const response = await fetch(
-    `https://fcm.googleapis.com/v1/projects/${process.env.FIREBASE_PROJECT_ID}/messages:sendEachForMulticast`,
-    {
+  for (const subscriber of subscribers) {
+    const response = await fetch(
+      `https://fcm.googleapis.com/v1/projects/${process.env.FIREBASE_PROJECT_ID}/messages:send`,
+      {
         method: "POST",
         headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify(message),
-    }
+        body: JSON.stringify({
+          message: {
+            token: subscriber.token,
+            notification: {
+              title: "CTWB Daily Challenge 📅",
+              body: "Today's challenge is live — can you top the leaderboard?",
+            },
+            webpush: {
+              fcm_options: {
+                link: "https://playctwb.vercel.app/daily",
+              },
+            },
+          },
+        }),
+      }
     );
 
-  const text = await response.text();
-  console.log("FCM status:", response.status);
-  console.log("FCM response:", text);
+    const data = await response.json();
+    console.log("FCM response for token:", JSON.stringify(data));
+    if (response.ok) successCount++;
+  }
 
-  res.status(200).json({ status: response.status, body: text });
-
-  const data = await response.json();
-  console.log("FCM response:", JSON.stringify(data));
-  res.status(200).json({ sent: data.successCount || 0 });
+  res.status(200).json({ sent: successCount });
 }
 
 async function getAccessToken() {
