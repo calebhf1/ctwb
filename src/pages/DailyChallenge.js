@@ -101,6 +101,12 @@ const DAILY_ROUTES = [
   origin: "Hagia Sophia, Istanbul, Turkey",
   destination: "Galata Tower, Istanbul, Turkey",
 },
+{
+  date: "2026-05-28",
+  city: "Buenos Aires, Argentina",
+  origin: "Plaza de Mayo, Buenos Aires, Argentina",
+  destination: "La Bombonera Stadium, Buenos Aires, Argentina",
+},
 ];
 
 
@@ -135,6 +141,7 @@ const CITY_TIMEZONES = {
   "Mexico City, Mexico": "America/Mexico_City",
   "Seattle, WA": "America/Los_Angeles",
   "Istanbul, Turkey": "Europe/Istanbul",
+  "Buenos Aires, Argentina": "America/Argentina/Buenos_Aires",
 
 };
 
