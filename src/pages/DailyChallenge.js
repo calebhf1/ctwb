@@ -108,6 +108,12 @@ const DAILY_ROUTES = [
   origin: "Plaza de Mayo, Buenos Aires, Argentina",
   destination: "La Bombonera Stadium, Buenos Aires, Argentina",
 },
+{
+  date: "2026-05-29",
+  city: "Chicago",
+  origin: "Daley Plaza, Chicago",
+  destination: "Wrigley Field, Chicago",
+},
 ];
 
 
