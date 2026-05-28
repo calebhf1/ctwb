@@ -152,6 +152,27 @@ const CITY_TIMEZONES = {
 
 };
 
+function IOSInstallBanner() {
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent.toLowerCase());
+  const isStandalone = window.navigator.standalone === true;
+  const [dismissed, setDismissed] = useState(localStorage.getItem("ctwb_ios_banner_dismissed") === "true");
+
+  if (!isIOS || isStandalone || dismissed) return null;
+
+  return (
+    <div style={{ background: "#f0f4ff", border: "1px solid #c0d0ff", borderRadius: 8, padding: "12px 16px", marginBottom: 16, fontSize: 13 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <p style={{ fontWeight: 600, marginBottom: 6, color: "#1a3a8a" }}>📱 Get daily notifications on iPhone</p>
+        <button onClick={() => { localStorage.setItem("ctwb_ios_banner_dismissed", "true"); setDismissed(true); }}
+          style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: "#999", padding: 0, marginLeft: 8 }}>✕</button>
+      </div>
+      <p style={{ color: "#444", marginBottom: 0, lineHeight: 1.5 }}>
+        Tap <strong>⋯</strong> → <strong>Share</strong> → scroll down → <strong>"Add to Home Screen"</strong>. Then open CTWB from your home screen and tap "Notify me tomorrow".
+      </p>
+    </div>
+  );
+}
+
 function getCityTime(city) {
   const tz = CITY_TIMEZONES[city] || "America/New_York";
   return new Date().toLocaleTimeString("en-US", {
@@ -776,6 +797,7 @@ export default function DailyChallenge() {
         <span style={{ fontSize: 13, color: "#999" }}>{username}</span>
       </div>
       <p style={{ color: "#666", marginBottom: 16 }}>{today}</p>
+      <IOSInstallBanner />
 
       {!actuals && (
         <div style={{ background: "#f0f9f4", border: "1px solid #c3e6d4", borderRadius: 8, padding: "12px 16px", marginBottom: 20 }}>
@@ -877,6 +899,7 @@ export default function DailyChallenge() {
           </div>
 
           <ResultsCard route={route} score={totalScore} actuals={actuals} guesses={guesses} today={today} />
+          <IOSInstallBanner />
           <NotificationSignup username={username} />
 
           {showLocalPrompt && (
