@@ -1,13 +1,8 @@
 {
-  "headers": [
+  "crons": [
     {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "all"
-        }
-      ]
+      "path": "/api/send-notifications",
+      "schedule": "0 13 * * *"
     }
   ]
 }

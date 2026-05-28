@@ -10,6 +10,7 @@
     "@testing-library/user-event": "^13.5.0",
     "@vercel/analytics": "^2.0.1",
     "firebase": "^12.13.0",
+    "google-auth-library": "^10.6.2",
     "http-proxy-middleware": "^4.0.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
