@@ -1,6 +1,35 @@
 import { createClient } from "@supabase/supabase-js";
 import { GoogleAuth } from "google-auth-library";
 
+const DAILY_ROUTES = [
+  { date: "2026-05-12", city: "New York" },
+  { date: "2026-05-13", city: "Chicago" },
+  { date: "2026-05-14", city: "Paris, France" },
+  { date: "2026-05-15", city: "London, UK" },
+  { date: "2026-05-16", city: "Tokyo, Japan" },
+  { date: "2026-05-17", city: "Singapore" },
+  { date: "2026-05-18", city: "Miami" },
+  { date: "2026-05-20", city: "São Paulo, Brazil" },
+  { date: "2026-05-21", city: "Montreal, Canada" },
+  { date: "2026-05-22", city: "Copenhagen, Denmark" },
+  { date: "2026-05-23", city: "Sydney, Australia" },
+  { date: "2026-05-24", city: "Berlin, Germany" },
+  { date: "2026-05-25", city: "Mexico City, Mexico" },
+  { date: "2026-05-26", city: "Seattle, WA" },
+  { date: "2026-05-27", city: "Istanbul, Turkey" },
+  { date: "2026-05-28", city: "Buenos Aires, Argentina" },
+  { date: "2026-05-29", city: "Chicago" },
+];
+
+function getTodayCity() {
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const exact = DAILY_ROUTES.find(r => r.date === today);
+  if (exact) return exact.city;
+  const past = DAILY_ROUTES.filter(r => r.date <= today);
+  return past[past.length - 1]?.city || "your city";
+}
+
 export default async function handler(req, res) {
   if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -19,6 +48,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ sent: 0 });
   }
 
+  const city = getTodayCity();
   const accessToken = await getAccessToken();
   let successCount = 0;
 
@@ -36,7 +66,7 @@ export default async function handler(req, res) {
             token: subscriber.token,
             notification: {
               title: "CTWB Daily Challenge 📅",
-              body: "Today's challenge is live — can you top the leaderboard?",
+              body: `Today's city is ${city} — can you top the leaderboard?`,
             },
             webpush: {
               fcm_options: {
@@ -49,7 +79,6 @@ export default async function handler(req, res) {
     );
 
     const data = await response.json();
-    console.log("FCM response for token:", JSON.stringify(data));
     if (response.ok) successCount++;
   }
 
