@@ -37,14 +37,20 @@ export default async function handler(req, res) {
   const response = await fetch(
     `https://fcm.googleapis.com/v1/projects/${process.env.FIREBASE_PROJECT_ID}/messages:sendEachForMulticast`,
     {
-      method: "POST",
-      headers: {
+        method: "POST",
+        headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(message),
+        },
+        body: JSON.stringify(message),
     }
-  );
+    );
+
+  const text = await response.text();
+  console.log("FCM status:", response.status);
+  console.log("FCM response:", text);
+
+  res.status(200).json({ status: response.status, body: text });
 
   const data = await response.json();
   console.log("FCM response:", JSON.stringify(data));
