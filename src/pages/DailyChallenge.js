@@ -376,7 +376,7 @@ export default function DailyChallenge() {
   const navigate = useNavigate();
   const route = getTodayRoute();
   const todayDate = getTodayDate();
-  const storageKey = `ctwb_daily_${todayDate}`;
+  const storageKey = `ctwb_daily_${todayDate}_${route.city.replace(/[^a-z]/gi, '')}`;
   const today = new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
   const savedResult = (() => {
