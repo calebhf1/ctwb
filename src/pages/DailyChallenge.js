@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import supabase from "../supabase";
 import React from "react";
+import NotificationSignup from "../components/NotificationSignup";
 
 const MODES = [
   { key: "driving",   label: "Car",     emoji: "🚗" },
@@ -870,6 +871,7 @@ export default function DailyChallenge() {
           </div>
 
           <ResultsCard route={route} score={totalScore} actuals={actuals} guesses={guesses} today={today} />
+          <NotificationSignup username={username} />
 
           {showLocalPrompt && (
             <div style={{ background: "#f0f9f4", border: "1px solid #c3e6d4", borderRadius: 12, padding: "20px", marginBottom: 16 }}>
