@@ -114,6 +114,12 @@ const DAILY_ROUTES = [
   origin: "Daley Plaza, Chicago",
   destination: "Wrigley Field, Chicago",
 },
+{
+  date: "2026-05-31",
+  city: "Rome, Italy",
+  origin: "Vatican City, Rome, Italy",
+  destination: "Colosseum, Rome, Italy",
+},
 ];
 
 
@@ -149,6 +155,7 @@ const CITY_TIMEZONES = {
   "Seattle, WA": "America/Los_Angeles",
   "Istanbul, Turkey": "Europe/Istanbul",
   "Buenos Aires, Argentina": "America/Argentina/Buenos_Aires",
+  "Rome, Italy": "Europe/Rome",
 
 };
 
