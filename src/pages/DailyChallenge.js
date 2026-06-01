@@ -115,7 +115,7 @@ const DAILY_ROUTES = [
   destination: "Wrigley Field, Chicago",
 },
 {
-  date: "2026-05-31",
+  date: "2026-06-01",
   city: "Rome, Italy",
   origin: "Vatican City, Rome, Italy",
   destination: "Colosseum, Rome, Italy",

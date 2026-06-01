@@ -19,6 +19,7 @@ const DAILY_ROUTES = [
   { date: "2026-05-27", city: "Istanbul, Turkey" },
   { date: "2026-05-28", city: "Buenos Aires, Argentina" },
   { date: "2026-05-29", city: "Chicago" },
+  { date: "2026-06-01", city: "Rome, Italy" },
 ];
 
 function getTodayCity() {
