@@ -117,7 +117,7 @@ const DAILY_ROUTES = [
 {
   date: "2026-06-01",
   city: "Rome, Italy",
-  origin: "Vatican City, Rome, Italy",
+  origin: "Trevi Fountain, Rome, Italy",
   destination: "Colosseum, Rome, Italy",
 },
 ];
