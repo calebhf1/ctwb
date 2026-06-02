@@ -120,6 +120,12 @@ const DAILY_ROUTES = [
   origin: "Trevi Fountain, Rome, Italy",
   destination: "Colosseum, Rome, Italy",
 },
+{
+  date: "2026-06-02",
+  city: "Denver",
+  origin: "Colorado State Capitol, Denver",
+  destination: "Denver Zoo, Denver",
+},
 ];
 
 
@@ -156,6 +162,7 @@ const CITY_TIMEZONES = {
   "Istanbul, Turkey": "Europe/Istanbul",
   "Buenos Aires, Argentina": "America/Argentina/Buenos_Aires",
   "Rome, Italy": "Europe/Rome",
+  "Denver": "America/Denver",
 
 };
 
