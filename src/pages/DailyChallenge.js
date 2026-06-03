@@ -130,7 +130,7 @@ const DAILY_ROUTES = [
   date: "2026-06-03",
   city: "Washington DC",
   origin: "Lincoln Memorial, Washington DC",
-  destination: "U.S. Capitol, Washington DC",
+  destination: "The Capitol Building, Washington DC",
 },
 ];
 
