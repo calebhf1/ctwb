@@ -126,6 +126,12 @@ const DAILY_ROUTES = [
   origin: "Colorado State Capitol, Denver",
   destination: "Denver Zoo, Denver",
 },
+{
+  date: "2026-06-03",
+  city: "Washington DC",
+  origin: "Lincoln Memorial, Washington DC",
+  destination: "United States Capitol, Washington DC",
+},
 ];
 
 
@@ -163,7 +169,6 @@ const CITY_TIMEZONES = {
   "Buenos Aires, Argentina": "America/Argentina/Buenos_Aires",
   "Rome, Italy": "Europe/Rome",
   "Denver": "America/Denver",
-
 };
 
 function IOSInstallBanner() {
