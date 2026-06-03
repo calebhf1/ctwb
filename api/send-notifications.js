@@ -21,12 +21,16 @@ const DAILY_ROUTES = [
   { date: "2026-05-29", city: "Chicago" },
   { date: "2026-06-01", city: "Rome, Italy" },
   { date: "2026-06-02", city: "Denver" },
-  { date: "2026-06-03", city: "Washington DC" },
+  { date: "2026-06-03", city: "Washington, DC" },
 ];
 
-function getTodayCity() {
+function getTodayDate() {
   const now = new Date();
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
+function getTodayCity() {
+  const today = getTodayDate();
   const exact = DAILY_ROUTES.find(r => r.date === today);
   if (exact) return exact.city;
   const past = DAILY_ROUTES.filter(r => r.date <= today);
@@ -43,11 +47,24 @@ export default async function handler(req, res) {
     process.env.SUPABASE_SERVICE_KEY
   );
 
+  // prevent duplicate sends
+  const today = getTodayDate();
+  const { data: alreadySent } = await supabase
+    .from("notification_log")
+    .select("id")
+    .eq("date", today)
+    .maybeSingle();
+
+  if (alreadySent) {
+    return res.status(200).json({ message: "Already sent today", skipped: true });
+  }
+
   const { data: subscribers } = await supabase
     .from("push_subscribers")
     .select("token");
 
   if (!subscribers || subscribers.length === 0) {
+    await supabase.from("notification_log").insert({ date: today, count: 0 });
     return res.status(200).json({ sent: 0 });
   }
 
@@ -81,10 +98,10 @@ export default async function handler(req, res) {
       }
     );
 
-    const data = await response.json();
     if (response.ok) successCount++;
   }
 
+  await supabase.from("notification_log").insert({ date: today, count: successCount });
   res.status(200).json({ sent: successCount });
 }
 
