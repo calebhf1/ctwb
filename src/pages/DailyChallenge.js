@@ -138,6 +138,12 @@ const DAILY_ROUTES = [
   origin: "Geneva Graduate Institute, Geneva, Switzerland",
   destination: "Plaine de Plainpalais, Geneva, Switzerland",
 },
+{
+  date: "2026-06-05",
+  city: "Jerusalem",
+  origin: "Museum for Islamic Art, Jerusalem",
+  destination: "Western Wall, Jerusalem",
+},
 ];
 
 
@@ -176,6 +182,7 @@ const CITY_TIMEZONES = {
   "Rome, Italy": "Europe/Rome",
   "Denver": "America/Denver",
   "Geneva, Switzerland": "Europe/Zurich",
+  "Jerusalem": "Asia/Jerusalem",
 };
 
 function IOSInstallBanner() {
