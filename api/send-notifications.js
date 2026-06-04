@@ -48,15 +48,14 @@ export default async function handler(req, res) {
     process.env.SUPABASE_SERVICE_KEY
   );
 
-  // prevent duplicate sends
   const today = getTodayDate();
-  const { data: alreadySent } = await supabase
-    .from("notification_log")
-    .select("id")
-    .eq("date", today)
-    .maybeSingle();
 
-  if (alreadySent) {
+  // atomic duplicate prevention using unique constraint on date
+  const { error: logError } = await supabase
+    .from("notification_log")
+    .insert({ date: today, count: 0 });
+
+  if (logError) {
     return res.status(200).json({ message: "Already sent today", skipped: true });
   }
 
@@ -65,7 +64,6 @@ export default async function handler(req, res) {
     .select("token");
 
   if (!subscribers || subscribers.length === 0) {
-    await supabase.from("notification_log").insert({ date: today, count: 0 });
     return res.status(200).json({ sent: 0 });
   }
 
@@ -102,7 +100,11 @@ export default async function handler(req, res) {
     if (response.ok) successCount++;
   }
 
-  await supabase.from("notification_log").insert({ date: today, count: successCount });
+  await supabase
+    .from("notification_log")
+    .update({ count: successCount })
+    .eq("date", today);
+
   res.status(200).json({ sent: successCount });
 }
 
