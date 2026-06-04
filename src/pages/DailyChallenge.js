@@ -132,6 +132,12 @@ const DAILY_ROUTES = [
   origin: "Lincoln Memorial, Washington DC",
   destination: "The Capitol Building, Washington DC",
 },
+{
+  date: "2026-06-04",
+  city: "Geneva, Switzerland",
+  origin: "Geneva Graduate Institute, Geneva, Switzerland",
+  destination: "Plaine de Plainpalais, Geneva, Switzerland",
+},
 ];
 
 
@@ -169,6 +175,7 @@ const CITY_TIMEZONES = {
   "Buenos Aires, Argentina": "America/Argentina/Buenos_Aires",
   "Rome, Italy": "Europe/Rome",
   "Denver": "America/Denver",
+  "Geneva, Switzerland": "Europe/Zurich",
 };
 
 function IOSInstallBanner() {

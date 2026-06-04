@@ -22,6 +22,7 @@ const DAILY_ROUTES = [
   { date: "2026-06-01", city: "Rome, Italy" },
   { date: "2026-06-02", city: "Denver" },
   { date: "2026-06-03", city: "Washington, DC" },
+  { date: "2026-06-04", city: "Geneva, Switzerland" },
 ];
 
 function getTodayDate() {
