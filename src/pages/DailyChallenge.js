@@ -144,6 +144,12 @@ const DAILY_ROUTES = [
   origin: "Museum for Islamic Art, Jerusalem",
   destination: "Western Wall, Jerusalem",
 },
+{
+  date: "2026-06-06",
+  city: "Auckland, New Zealand",
+  origin: "Sky Tower, Auckland, New Zealand",
+  destination: "Devonport Beach, Auckland, New Zealand",
+},
 ];
 
 
@@ -183,6 +189,7 @@ const CITY_TIMEZONES = {
   "Denver": "America/Denver",
   "Geneva, Switzerland": "Europe/Zurich",
   "Jerusalem": "Asia/Jerusalem",
+  "Auckland, New Zealand": "Pacific/Auckland",
 };
 
 function IOSInstallBanner() {
