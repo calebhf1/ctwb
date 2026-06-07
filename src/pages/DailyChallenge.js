@@ -196,7 +196,6 @@ const CITY_TIMEZONES = {
   "Geneva, Switzerland": "Europe/Zurich",
   "Jerusalem": "Asia/Jerusalem",
   "Auckland, New Zealand": "Pacific/Auckland",
-  "San Francisco": "America/Los_Angeles",
 };
 
 function IOSInstallBanner() {
