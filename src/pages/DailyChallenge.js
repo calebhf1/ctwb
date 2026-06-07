@@ -150,6 +150,12 @@ const DAILY_ROUTES = [
   origin: "Sky Tower, Auckland, New Zealand",
   destination: "Devonport Beach, Auckland, New Zealand",
 },
+{
+  date: "2026-06-07",
+  city: "San Francisco",
+  origin: "Painted Ladies, San Francisco",
+  destination: "Golden Gate Bridge Welcome Center, San Francisco",
+},
 ];
 
 
@@ -190,6 +196,7 @@ const CITY_TIMEZONES = {
   "Geneva, Switzerland": "Europe/Zurich",
   "Jerusalem": "Asia/Jerusalem",
   "Auckland, New Zealand": "Pacific/Auckland",
+  "San Francisco": "America/Los_Angeles",
 };
 
 function IOSInstallBanner() {
