@@ -156,6 +156,12 @@ const DAILY_ROUTES = [
   origin: "Painted Ladies, San Francisco",
   destination: "Golden Gate Bridge Welcome Center, San Francisco",
 },
+{
+  date: "2026-06-09",
+  city: "Barcelona, Spain",
+  origin: "Sagrada Família, Barcelona, Spain",
+  destination: "Park Güell, Barcelona, Spain",
+}
 ];
 
 
@@ -196,6 +202,7 @@ const CITY_TIMEZONES = {
   "Geneva, Switzerland": "Europe/Zurich",
   "Jerusalem": "Asia/Jerusalem",
   "Auckland, New Zealand": "Pacific/Auckland",
+  "Barcelona, Spain": "Europe/Madrid",
 };
 
 function IOSInstallBanner() {
