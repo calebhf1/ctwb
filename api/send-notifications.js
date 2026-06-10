@@ -27,6 +27,7 @@ const DAILY_ROUTES = [
   { date: "2026-06-06", city: "Auckland, New Zealand" },
   { date: "2026-06-07", city: "San Francisco" },
   { date: "2026-06-09", city: "Barcelona, Spain" },
+  { date: "2026-06-10", city: "Lisbon, Portugal" },
 ];
 
 function getTodayDate() {

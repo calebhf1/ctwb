@@ -161,6 +161,12 @@ const DAILY_ROUTES = [
   city: "Barcelona, Spain",
   origin: "Sagrada Família, Barcelona, Spain",
   destination: "Park Güell, Barcelona, Spain",
+},
+{
+  date: "2026-06-10",
+  city: "Lisbon, Portugal",
+  origin: "Belém Tower, Lisbon, Portugal",
+  destination: "Jerónimos Monastery, Lisbon, Portugal",
 }
 ];
 
@@ -203,6 +209,7 @@ const CITY_TIMEZONES = {
   "Jerusalem": "Asia/Jerusalem",
   "Auckland, New Zealand": "Pacific/Auckland",
   "Barcelona, Spain": "Europe/Madrid",
+  "Lisbon, Portugal": "Europe/Lisbon",
 };
 
 function IOSInstallBanner() {
