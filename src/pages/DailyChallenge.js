@@ -167,6 +167,11 @@ const DAILY_ROUTES = [
   city: "Lisbon, Portugal",
   origin: "Belém Tower, Lisbon, Portugal",
   destination: "Jerónimos Monastery, Lisbon, Portugal",
+},
+{  date: "2026-06-16",
+  city: "Dublin, Ireland",
+  origin: "Trinity College, Dublin, Ireland",
+  destination: "Guinness Storehouse, Dublin, Ireland",
 }
 ];
 
@@ -210,6 +215,7 @@ const CITY_TIMEZONES = {
   "Auckland, New Zealand": "Pacific/Auckland",
   "Barcelona, Spain": "Europe/Madrid",
   "Lisbon, Portugal": "Europe/Lisbon",
+  "Dublin, Ireland": "Europe/Dublin",
 };
 
 function IOSInstallBanner() {
